@@ -983,49 +983,93 @@ img { display: block; }
    BOTTOM BAR (mobile only)
    ================================================================ */
 
+/* ================================================================
+   BOTTOM BAR — FIXED BY RAZA'S REQUIREMENT
+   ================================================================ */
+
 #bottom-bar {
   position: fixed;
-  bottom: 0;
-  left: 0;
+  bottom: 0; 
+  left: 0; 
   right: 0;
-  height: 48px;
-  background: #080808;
-  border-top: 1px solid #00f5ff15;
+  z-index: 100;
   display: flex;
-  justify-content: space-around;
-  align-items: center;
-  z-index: 99;
+  flex-direction: column; /* اس سے مینیو اور آپ کا نام ایک دوسرے کے اوپر نیچے آئیں گے */
 }
 
-#bottom-bar .nav-item {
+#bottom-nav {
+  display: flex;
+  align-items: stretch;
+  border-top: 1px solid #1a2a35;
+  background: rgba(8, 8, 8, 0.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.nav-item {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  border-radius: 0;
+  padding: 10px 0 8px;
+  gap: 4px;
   position: relative;
-  gap: 0;
-  padding: 8px;
+  outline: none;
+  color: #2a4a5a; /* عام حالت میں رنگ */
+  transition: color 0.2s ease;
 }
 
-#bottom-bar .nav-item--active::after {
-  content: '';
+.nav-indicator {
   position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
   height: 2px;
+  border-radius: 0 0 4px 4px;
   background: #00f5ff;
-  box-shadow: 0 -4px 12px #00f5ff60;
+  box-shadow: 0 0 8px #00f5ff, 0 0 16px rgba(0,245,255,0.5);
+  transition: width 0.25s ease;
 }
 
-#bottom-bar .nav-indicator {
-  display: none;
+/* جب بٹن ایکٹو ہو */
+.nav-item--active { color: #00f5ff; }
+.nav-item--active svg { filter: drop-shadow(0 0 5px #00f5ff); }
+.nav-item--active .nav-indicator { width: 24px; }
+
+.nav-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.1em;
 }
 
+/* --- DEVELOPED BY RAZA SECTION --- */
+#dev-credit {
+  text-align: center;
+  padding: 4px 0 6px;
+  background: #000000; /* نام کے پیچھے کالا بیک گراؤنڈ تاکہ واضح ہو */
+  border-top: 1px solid #0d0d0d;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #555; /* Developed by کا رنگ */
+}
+
+.dev-name {
+  color: #00f5ff !important; /* RAZA کا نام چمکتا ہوا نیلا */
+  text-shadow: 0 0 8px rgba(0,245,255,0.8);
+  font-weight: bold;
+}
+
+/* ڈیسک ٹاپ پر چھپانے کے لیے */
 @media (min-width: 768px) {
   #bottom-bar {
     display: none;
   }
 }
+
 
 /* ================================================================
    MODALS
