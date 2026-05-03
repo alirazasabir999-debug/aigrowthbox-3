@@ -989,12 +989,10 @@ img { display: block; }
 
 #bottom-bar {
   position: fixed;
-  bottom: 0; 
-  left: 0; 
-  right: 0;
+  bottom: 0; left: 0; right: 0;
   z-index: 100;
   display: flex;
-  flex-direction: column; /* اس سے مینیو اور آپ کا نام ایک دوسرے کے اوپر نیچے آئیں گے */
+  flex-direction: column;
 }
 
 #bottom-nav {
@@ -1012,13 +1010,15 @@ img { display: block; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 10px 0 8px;
+  padding: 12px 0 10px;
   gap: 4px;
   position: relative;
   outline: none;
-  color: #2a4a5a; /* عام حالت میں رنگ */
+  color: #2a4a5a;
   transition: color 0.2s ease;
 }
+
+.nav-item svg { transition: filter 0.2s ease; }
 
 .nav-indicator {
   position: absolute;
@@ -1033,41 +1033,33 @@ img { display: block; }
   transition: width 0.25s ease;
 }
 
-/* جب بٹن ایکٹو ہو */
 .nav-item--active { color: #00f5ff; }
 .nav-item--active svg { filter: drop-shadow(0 0 5px #00f5ff); }
 .nav-item--active .nav-indicator { width: 24px; }
+.nav-item:hover:not(.nav-item--active) { color: rgba(0,245,255,0.5); }
 
 .nav-label {
   font-family: 'Share Tech Mono', monospace;
-  font-size: 8px;
-  letter-spacing: 0.1em;
+  font-size: 7px;
+  letter-spacing: 0.15em;
 }
 
-/* --- DEVELOPED BY RAZA SECTION --- */
 #dev-credit {
   text-align: center;
-  padding: 4px 0 6px;
-  background: #000000; /* نام کے پیچھے کالا بیک گراؤنڈ تاکہ واضح ہو */
+  padding: 6px 0 8px;
+  background: #040404;
   border-top: 1px solid #0d0d0d;
   font-family: 'Orbitron', sans-serif;
-  font-size: 8px;
-  letter-spacing: 0.25em;
+  font-size: 7px;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: #555; /* Developed by کا رنگ */
+  color: #2a4a5a;
 }
 
 .dev-name {
-  color: #00f5ff !important; /* RAZA کا نام چمکتا ہوا نیلا */
-  text-shadow: 0 0 8px rgba(0,245,255,0.8);
-  font-weight: bold;
-}
-
-/* ڈیسک ٹاپ پر چھپانے کے لیے */
-@media (min-width: 768px) {
-  #bottom-bar {
-    display: none;
-  }
+  color: #00f5ff;
+  text-shadow: 0 0 6px rgba(0,245,255,0.5);
+  letter-spacing: 0.35em;
 }
 
 
