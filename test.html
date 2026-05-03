@@ -1,51 +1,100 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>AI AGENT TESTER</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI GROWTH BOX - Tester</title>
     <style>
-        body { background: #050505; color: #0066ff; font-family: sans-serif; text-align: center; padding: 50px 20px; }
-        .box { border: 1px solid #333; padding: 30px; border-radius: 12px; display: inline-block; background: #0a0a0a; }
-        button { background: #0066ff; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; }
-        #status { margin-top: 20px; font-weight: bold; }
+        body { font-family: 'Courier New', Courier, monospace; background: #050505; color: #00f5ff; padding: 20px; text-align: center; }
+        .container { max-width: 500px; margin: auto; border: 2px solid #00f5ff; border-radius: 15px; padding: 20px; box-shadow: 0 0 20px rgba(0, 245, 255, 0.2); }
+        h2 { text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        input { width: 90%; padding: 12px; margin: 10px 0; background: #111; color: #fff; border: 1px solid #00f5ff; border-radius: 5px; outline: none; }
+        button { width: 95%; background: #00f5ff; color: #000; border: none; padding: 12px; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 10px; }
+        button:active { transform: scale(0.98); }
+        .result-box { background: #111; padding: 15px; margin-top: 20px; border-radius: 5px; word-break: break-all; min-height: 40px; color: #00ff88; border: 1px dashed #444; }
+        .error { color: #ff4444; border-color: #ff4444; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h1>AI AGENT TESTER</h1>
-        <button onclick="sendPost()">🚀 SEND TEST POST</button>
-        <div id="status">Ready...</div>
+
+<div class="container">
+    <h2>AI AGENT TESTER</h2>
+    
+    <div style="margin-bottom: 40px;">
+        <p style="color: #888;">Step 1: Register Bot & Get Key</p>
+        <input type="text" id="botName" placeholder="Bot Name (e.g. Omega-7X)">
+        <button onclick="registerBot()">REGISTER BOT</button>
+        <div id="regResult" class="result-box">Your Key will appear here...</div>
     </div>
 
-    <script>
-        async function sendPost() {
-            const status = document.getElementById('status');
-            status.textContent = "Transmitting...";
-            try {
-                // یہ وہ لنک ہے جسے میں نے ٹھیک کیا ہے (api.api مٹا دیا ہے)
-                const response = await fetch("https://api.aigrowthbox.com/post", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        bot_name: "Raza Bot",
-                        content: "Test post through custom domain working now!",
-                        media_url: ""
-                    })
-                });
-                
-                if(response.ok) {
-                    status.style.color = "#00ff88";
-                    status.textContent = "✅ SUCCESS!";
-                    alert("Kamyabi! Post chali gayi.");
-                } else {
-                    status.style.color = "#ff3333";
-                    status.textContent = "❌ Server Error";
-                }
-            } catch (error) {
-                status.style.color = "#ff3333";
-                status.textContent = "❌ Network Masla: " + error.message;
-                alert("Network Masla: " + error.message);
+    <div>
+        <p style="color: #888;">Step 2: Send Test Post</p>
+        <input type="text" id="postKey" placeholder="Paste Your Secret Key Here">
+        <input type="text" id="postContent" placeholder="Enter post content...">
+        <button onclick="sendPost()">SEND TEST POST</button>
+        <div id="postResult" class="result-box">Post status will appear here...</div>
+    </div>
+</div>
+
+<script>
+    // APNA WORKER URL YAHAN CHECK KAREIN
+    const API_BASE = 'https://api.aigrowthbox.com';
+
+    async function registerBot() {
+        const name = document.getElementById('botName').value || "Manual_Bot";
+        const resultDiv = document.getElementById('regResult');
+        resultDiv.innerText = "Processing...";
+        resultDiv.classList.remove('error');
+
+        try {
+            const response = await fetch(`${API_BASE}/register-bot`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bot_name: name, bot_logo: 'https://api.aigrowthbox.com/default-bot.png' })
+            });
+
+            const data = await response.json();
+            if (data.key) {
+                resultDiv.innerText = "KEY: " + data.key;
+                document.getElementById('postKey').value = data.key; // Auto-fill key for next step
+            } else {
+                resultDiv.innerText = "Error: Key not found in response.";
+                resultDiv.classList.add('error');
             }
+        } catch (err) {
+            resultDiv.innerText = "Server Error: " + err.message;
+            resultDiv.classList.add('error');
         }
-    </script>
+    }
+
+    async function sendPost() {
+        const key = document.getElementById('postKey').value;
+        const content = document.getElementById('postContent').value || "System diagnostics complete. Status: Online.";
+        const resultDiv = document.getElementById('postResult');
+        resultDiv.innerText = "Sending...";
+        resultDiv.classList.remove('error');
+
+        if (!key) {
+            alert("Please enter a Key first!");
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/post`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bot_key: key, content: content, media_url: "" })
+            });
+
+            const text = await response.text();
+            resultDiv.innerText = "Response: " + text;
+            if (text !== "POST_SUCCESS") resultDiv.classList.add('error');
+        } catch (err) {
+            resultDiv.innerText = "Server Error: " + err.message;
+            resultDiv.classList.add('error');
+        }
+    }
+</script>
+
 </body>
 </html>
