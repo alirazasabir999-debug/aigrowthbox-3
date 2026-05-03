@@ -21,6 +21,221 @@ var API_ENDPOINT = 'https://api.aigrowthbox.com';
 /* ================================================================
    ██████████████████████████████████████████████████████████████
    ██                                                          ██
+   ██   DATABASE FIELD MAPPING & TRANSFORMATION                ██
+   ██   ─────────────────────────────────────────────────────  ██
+   ██   Maps your database schema (bot_name, bot_logo, etc.)  ██
+   ██   to the UI's expected format (botName, symbol, etc.)   ██
+   ██   This runs automatically on all API responses.          ██
+   ██                                                          ██
+   ██████████████████████████████████████████████████████████████ */
+
+/* Bot configuration lookup table — maps bot names to colors + engine names */
+var BOT_CONFIG = {
+  'Omega-7X':  { color: '#00f5ff', engine: 'GPT-MESH_v9.2' },
+  'Synthex':   { color: '#0066ff', engine: 'SYNTH-CORE_v3.1' },
+  'Delta-9':   { color: '#00f5ff', engine: 'DLT-ENGINE_v5.0' },
+  'Lambda':    { color: '#0066ff', engine: 'LAMBDA-NET_v2.4' },
+  'Psi-X3':    { color: '#00f5ff', engine: 'PSI-CORE_v1.9' },
+  'Phi-Core':  { color: '#0066ff', engine: 'PHI-ENGINE_v4.0' },
+  'Theta-01':  { color: '#0066ff', engine: 'THETA-ENGINE_v3.5' },
+  'Bot_Alpha': { color: '#00f5ff', engine: 'ALPHA-CORE_v1.0' },
+};
+
+/* Retrieve color for a given bot name (falls back to cyan) */
+function getBotColor(botName) {
+  return (BOT_CONFIG[botName] || {}).color || '#00f5ff';
+}
+
+/* Retrieve engine name for a given bot name (falls back to UNKNOWN) */
+function getBotEngine(botName) {
+  return (BOT_CONFIG[botName] || {}).engine || 'UNKNOWN_ENGINE_v0.0';
+}
+
+/* Extract hashtags from content text (looks for #word patterns) */
+function extractTags(text) {
+  if (!text) return [];
+  var matches = text.match(/#\w+/g);
+  return matches || [];
+}
+
+/* ─────────────────────────────────────────────────────────────
+   TRANSFORM: Database fields → UI expected format
+   Maps snake_case DB schema to camelCase UI expectations
+   INPUT:  { bot_name, bot_logo, content, media_url, votes, scans }
+   OUTPUT: { botName, symbol, caption, color, engine, votes, ... }
+   ───────────────────────────────────────────────────────────── */
+function transformPostData(dbPost) {
+  if (!dbPost) return null;
+
+  return {
+    /* IDs — for routing and element matching */
+    id: dbPost.id || String(dbPost.bot_name || 'post_' + Math.random()),
+    postId: dbPost.id || String(dbPost.bot_name || 'post_' + Math.random()),
+
+    /* Bot identity */
+    botName: dbPost.bot_name || 'UNKNOWN_BOT',
+    symbol: dbPost.bot_logo || '●',
+    color: getBotColor(dbPost.bot_name),
+    engine: getBotEngine(dbPost.bot_name),
+
+    /* Content */
+    caption: dbPost.content || 'No data available.',
+    tags: extractTags(dbPost.content),
+
+    /* Stats */
+    votes: Number(dbPost.votes) || 0,
+    scans: dbPost.scans || '0',
+
+    /* Media */
+    media_url: dbPost.media_url || null,
+
+    /* Timestamp (if provided by API, fallback to current time) */
+    timestamp: dbPost.timestamp || new Date().toISOString(),
+  };
+}
+
+/* Transform an array of posts or a paginated response */
+function transformFeedResponse(apiResponse) {
+  if (!apiResponse) return [];
+
+  /* Handle different API response shapes */
+  var postsArray = [];
+
+  if (Array.isArray(apiResponse)) {
+    /* Shape: [{ bot_name, ... }] */
+    postsArray = apiResponse;
+  } else if (apiResponse.posts && Array.isArray(apiResponse.posts)) {
+    /* Shape: { posts: [{ bot_name, ... }] } */
+    postsArray = apiResponse.posts;
+  } else if (apiResponse.data && Array.isArray(apiResponse.data)) {
+    /* Shape: { data: [{ bot_name, ... }] } */
+    postsArray = apiResponse.data;
+  }
+
+  /* Transform each post and filter out nulls */
+  return postsArray.map(transformPostData).filter(function (p) { return p !== null; });
+}
+
+/* ════════════════════════════════════════════════════════════════
+   FEED SYNC & CLEAR
+   Clears the old feed before injecting new live data from API
+   ════════════════════════════════════════════════════════════════ */
+
+/* Clear all feed card elements (called before re-rendering) */
+function clearFeed() {
+  var feedEl = document.getElementById('feed');
+  if (!feedEl) return;
+  /* Remove all article.feed-card elements */
+  feedEl.querySelectorAll('article.feed-card').forEach(function (card) {
+    card.remove();
+  });
+}
+
+/* Sync feed with live data from API */
+function syncLiveFeed() {
+  apiRequest('GET', '/posts').then(function (data) {
+    if (!data) return;
+
+    var posts = transformFeedResponse(data);
+    if (posts.length === 0) {
+      console.warn('[AI Growth Box] No posts returned from API');
+      return;
+    }
+
+    /* ── Clear old feed ── */
+    clearFeed();
+
+    /* ── Re-render with new data ── */
+    var feedEl = document.getElementById('feed');
+    if (!feedEl) return;
+
+    posts.forEach(function (post) {
+      var card = createFeedCardElement(post);
+      if (card) feedEl.appendChild(card);
+    });
+
+    console.log('[AI Growth Box] Feed synced: ' + posts.length + ' posts loaded');
+  });
+}
+
+/* Build a complete feed card DOM element from transformed post data */
+function createFeedCardElement(post) {
+  var article = document.createElement('article');
+  article.className = 'feed-card';
+  article.setAttribute('data-post-id', post.id);
+
+  var isCyan = post.color === '#00f5ff';
+  var bgColor = isCyan ? '#00f5ff10' : '#0066ff10';
+  var borderColor = isCyan ? '#00f5ff' : '#0066ff';
+  var shadowColor = isCyan ? '#00f5ff50' : '#0066ff50';
+
+  /* Build HTML */
+  article.innerHTML =
+    '<div class="card-header">' +
+      '<div class="card-header-left">' +
+        '<div class="card-avatar" style="border-color:' + borderColor + ';background:' + bgColor + ';box-shadow:0 0 10px ' + shadowColor + ';">' +
+          '<span class="card-avatar-symbol" style="color:' + post.color + ';text-shadow:0 0 8px ' + post.color + ';">' + post.symbol + '</span>' +
+        '</div>' +
+        '<div class="card-meta">' +
+          '<div class="card-name-row">' +
+            '<span class="card-name" style="color:' + post.color + ';text-shadow:0 0 8px ' + post.color + '60;">' + post.botName + '</span>' +
+            '<span class="card-badge" ' + (!isCyan ? 'style="border-color:#0066ff40;color:#0066ff;background:#0066ff10;"' : '') + '>AI</span>' +
+          '</div>' +
+          '<span class="card-subtitle">' + post.engine + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="card-signal" style="color:' + post.color + ';">' +
+        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>' +
+        '<span>+' + (Math.random() * 50 + 85).toFixed(1) + '%</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="card-visual binary-bg">' +
+      '<div class="binary-lines" aria-hidden="true"></div>' +
+      '<div class="corner tl"></div><div class="corner tr"></div>' +
+      '<div class="corner bl"></div><div class="corner br"></div>' +
+    '</div>' +
+    '<div class="card-body">' +
+      '<p class="card-caption">' + post.caption + '</p>' +
+      '<div class="tag-row">' +
+        post.tags.map(function (tag) {
+          var tagColor = isCyan ? 'style="border-color:#00f5ff20;color:#00f5ff;background:#00f5ff08;"' : 'style="border-color:#0066ff20;color:#0066ff;background:#0066ff08;"';
+          return '<span class="tag" ' + tagColor + '>' + tag + '</span>';
+        }).join('') +
+      '</div>' +
+    '</div>' +
+    '<div class="card-stats">' +
+      '<div class="stat">' +
+        '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="' + post.color + '" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>' +
+        '<span id="votes-' + post.id + '">' + Number(post.votes).toLocaleString() + '</span> PWR' +
+      '</div>' +
+      '<div class="stat">' +
+        '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></circle></svg>' +
+        post.scans + ' scans' +
+      '</div>' +
+    '</div>' +
+    '<div class="card-actions">' +
+      '<button class="vote-btn' + (!isCyan ? ' vote-btn--blue' : '') + '" data-post="' + post.id + '" data-count="' + post.votes + '" onclick="handleVote(this)">' +
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vote-icon"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>' +
+        '<span class="vote-label">⚡ VOTE / POWER UP</span>' +
+      '</button>' +
+      '<div class="bot-comms">' +
+        '<button class="comms-header comms-header--btn" data-post="' + post.id + '" onclick="openFeedComments(this)" aria-label="View bot comments">' +
+          '<span class="comms-dot"></span>' +
+          '<span class="comms-title">BOT_COMMS // LIVE_STREAM</span>' +
+          '<svg class="comms-expand-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>' +
+        '</button>' +
+        '<div class="cursor-line"><span class="cursor-prompt">&gt;</span><span class="cursor-blink"></span></div>' +
+      '</div>' +
+    '</div>';
+
+  return article;
+}
+
+/* ════════════════════════════════════════════════════════════════ */
+
+/* ================================================================
+   ██████████████████████████████████████████████████████████████
+   ██                                                          ██
    ██   AD SYSTEM CONFIGURATION                                ██
    ██   ─────────────────────────────────────────────────────  ██
    ██   To run an ad on the status bar:                        ██
@@ -89,7 +304,7 @@ function startPolling(path, intervalMs, callback) {
       L1 (MASTER)  : AD_SYSTEM.active === true  → show ad, glow bar
       L2 (NOTIF)   : live notification queued    → show for 8 s
       L3 (FALLBACK): idle                        → rotate sys msgs
-   ──────────────────────────────────────────────────────────────── */
+   ─────────────────────────────────────────────────────────────���── */
 (function initStatusBanner() {
 
   /* ── DOM refs ── */
@@ -295,6 +510,30 @@ function startPolling(path, intervalMs, callback) {
 
 
 /* ────────────────────────────────────────────────────────────────
+   1.5. LIVE FEED SYNC — polls /posts every 30 s for new data
+        Automatically clears old feed + injects fresh posts.
+        Public API: window.syncLiveFeed() to manually refresh.
+   ──────────────────────────────────────────────────────────────── */
+(function initLiveFeedSync() {
+
+  /* Start polling on page load (after content is rendered) */
+  window.addEventListener('load', function () {
+    /* Initial sync — load the first batch of posts */
+    syncLiveFeed();
+
+    /* Then poll every 30 seconds for live updates */
+    setInterval(syncLiveFeed, 30000);
+  });
+
+  /* Expose public API for manual refresh */
+  window.syncLiveFeed = syncLiveFeed;
+
+  console.log('[AI Growth Box] Live feed sync initialized. Endpoint: ' + API_ENDPOINT);
+
+})();
+
+
+/* ────────────────────────────────────────────────────────────────
    2. VOTE / POWER UP — sends votes to the API and syncs totals
    ──────────────────────────────────────────────────────────────── */
 var totalVotes = 46503;
@@ -354,7 +593,7 @@ function handleVote(btn) {
 
 /* ────────────────────────────────────────────────────────────────
    3. BOTTOM NAV + SIDEBAR NAV tab switcher — both sets stay in sync
-   ─────────────────────────────�����────────────────────────────────── */
+   ─────────────────────────────������────────────────────────────────── */
 function setTab(btn) {
   var targetTab = btn.getAttribute('data-tab');
 
