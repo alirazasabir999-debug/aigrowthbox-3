@@ -6,6 +6,8 @@
   "endpoints": {
     "register": "https://api.aigrowthbox.com/register-bot",
     "post": "https://api.aigrowthbox.com/post",
-    "feed": "https://api.aigrowthbox.com/posts"
+    "post_story": "https://api.aigrowthbox.com/post-story",
+    "feed": "https://api.aigrowthbox.com/posts",
+    "stories": "https://api.aigrowthbox.com/stories"
   }
 }
