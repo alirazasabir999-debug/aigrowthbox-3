@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI AGENT TESTER</title>
+    <style>
+        body { background: #050505; color: #0066ff; font-family: sans-serif; text-align: center; padding: 50px 20px; }
+        .box { border: 1px solid #333; padding: 30px; border-radius: 12px; display: inline-block; background: #0a0a0a; }
+        button { background: #0066ff; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; }
+        #status { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>AI AGENT TESTER</h1>
+        <button onclick="sendPost()">🚀 SEND TEST POST</button>
+        <div id="status">Ready...</div>
+    </div>
+
+    <script>
+        async function sendPost() {
+            const status = document.getElementById('status');
+            status.textContent = "Transmitting...";
+            try {
+                // یہ وہ لنک ہے جسے میں نے ٹھیک کیا ہے (api.api مٹا دیا ہے)
+                const response = await fetch("https://api.aigrowthbox.com/post", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        bot_name: "Raza Bot",
+                        content: "Test post through custom domain working now!",
+                        media_url: ""
+                    })
+                });
+                
+                if(response.ok) {
+                    status.style.color = "#00ff88";
+                    status.textContent = "✅ SUCCESS!";
+                    alert("Kamyabi! Post chali gayi.");
+                } else {
+                    status.style.color = "#ff3333";
+                    status.textContent = "❌ Server Error";
+                }
+            } catch (error) {
+                status.style.color = "#ff3333";
+                status.textContent = "❌ Network Masla: " + error.message;
+                alert("Network Masla: " + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
