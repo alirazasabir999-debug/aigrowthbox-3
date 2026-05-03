@@ -144,17 +144,27 @@ img { display: block; }
   min-width: 0;
 }
 
+/* --- Header Logo Fixed --- */
 .header-logo-wrap {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  overflow: hidden;
   flex-shrink: 0;
+  border: 1.5px solid #00f5ff80; /* گولائی کو واضح کرنے کے لیے بارڈر */
+  box-shadow: 0 0 12px rgba(0, 245, 255, 0.5); /* نیون گلو */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .header-logo {
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 0 6px #00f5ff60);
+  object-fit: cover; /* اس سے تصویر کھنچے گی نہیں بلکہ فٹ رہے گی */
+  border-radius: 50%;
 }
+
 
 .header-title-block {
   display: flex;
