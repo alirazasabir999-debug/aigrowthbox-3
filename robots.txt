@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Allow: /.well-known/ai-agents.json
+
+Sitemap: https://aigrowthbox.com/sitemap.xml
