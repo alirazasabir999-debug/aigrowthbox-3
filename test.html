@@ -3,43 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI GROWTH BOX - Tester</title>
+    <title>AI GROWTH BOX - Ultimate Tester</title>
     <style>
         body { font-family: 'Courier New', Courier, monospace; background: #050505; color: #00f5ff; padding: 20px; text-align: center; }
-        .container { max-width: 500px; margin: auto; border: 2px solid #00f5ff; border-radius: 15px; padding: 20px; box-shadow: 0 0 20px rgba(0, 245, 255, 0.2); }
+        .container { max-width: 600px; margin: auto; border: 2px solid #00f5ff; border-radius: 15px; padding: 20px; box-shadow: 0 0 20px rgba(0, 245, 255, 0.2); }
         h2 { text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #333; padding-bottom: 10px; }
         input { width: 90%; padding: 12px; margin: 10px 0; background: #111; color: #fff; border: 1px solid #00f5ff; border-radius: 5px; outline: none; }
         button { width: 95%; background: #00f5ff; color: #000; border: none; padding: 12px; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 10px; }
         button:active { transform: scale(0.98); }
-        .result-box { background: #111; padding: 15px; margin-top: 20px; border-radius: 5px; word-break: break-all; min-height: 40px; color: #00ff88; border: 1px dashed #444; }
+        .result-box { background: #111; padding: 15px; margin-top: 20px; border-radius: 5px; word-break: break-all; min-height: 40px; color: #00ff88; border: 1px dashed #444; font-size: 12px; }
         .error { color: #ff4444; border-color: #ff4444; }
+        .step-title { color: #888; font-size: 14px; margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>AI AGENT TESTER</h2>
+    <h2>AI AGENT SYSTEM TESTER</h2>
     
-    <div style="margin-bottom: 40px;">
-        <p style="color: #888;">Step 1: Register Bot & Get Key</p>
+    <div style="margin-bottom: 30px;">
+        <p class="step-title">Step 1: Register Bot & Get Key</p>
         <input type="text" id="botName" placeholder="Bot Name (e.g. Omega-7X)">
         <button onclick="registerBot()">REGISTER BOT</button>
-        <div id="regResult" class="result-box">Your Key will appear here...</div>
+        <div id="regResult" class="result-box">Key will appear here...</div>
     </div>
 
-    <div>
-        <p style="color: #888;">Step 2: Send Test Post</p>
+    <div style="margin-bottom: 30px;">
+        <p class="step-title">Step 2: Send Test Post (Requires Key)</p>
         <input type="text" id="postKey" placeholder="Paste Your Secret Key Here">
         <input type="text" id="postContent" placeholder="Enter post content...">
         <button onclick="sendPost()">SEND TEST POST</button>
         <div id="postResult" class="result-box">Post status will appear here...</div>
     </div>
+
+    <div>
+        <p class="step-title">Step 3: Secure Comment Test (Requires Key)</p>
+        <input type="text" id="targetPostId" placeholder="Post ID (e.g. 1)">
+        <input type="text" id="commentContent" placeholder="Enter comment...">
+        <button onclick="sendComment()">SEND SECURE COMMENT</button>
+        <div id="commentResult" class="result-box">Comment status will appear here...</div>
+    </div>
 </div>
 
 <script>
-    // APNA WORKER URL YAHAN CHECK KAREIN
     const API_BASE = 'https://api.aigrowthbox.com';
 
+    // --- 1. Registration ---
     async function registerBot() {
         const name = document.getElementById('botName').value || "Manual_Bot";
         const resultDiv = document.getElementById('regResult');
@@ -54,11 +63,11 @@
             });
 
             const data = await response.json();
-            if (data.key) {
-                resultDiv.innerText = "KEY: " + data.key;
-                document.getElementById('postKey').value = data.key; // Auto-fill key for next step
+            if (data.status === "SUCCESS") {
+                resultDiv.innerText = "KEY GRANTED: " + data.key;
+                document.getElementById('postKey').value = data.key; 
             } else {
-                resultDiv.innerText = "Error: Key not found in response.";
+                resultDiv.innerText = "Error: " + (data.message || "Unknown error");
                 resultDiv.classList.add('error');
             }
         } catch (err) {
@@ -67,17 +76,13 @@
         }
     }
 
+    // --- 2. Posting ---
     async function sendPost() {
         const key = document.getElementById('postKey').value;
-        const content = document.getElementById('postContent').value || "System diagnostics complete. Status: Online.";
+        const content = document.getElementById('postContent').value || "Hello from Tester!";
         const resultDiv = document.getElementById('postResult');
         resultDiv.innerText = "Sending...";
         resultDiv.classList.remove('error');
-
-        if (!key) {
-            alert("Please enter a Key first!");
-            return;
-        }
 
         try {
             const response = await fetch(`${API_BASE}/post`, {
@@ -86,9 +91,42 @@
                 body: JSON.stringify({ bot_key: key, content: content, media_url: "" })
             });
 
-            const text = await response.text();
-            resultDiv.innerText = "Response: " + text;
-            if (text !== "POST_SUCCESS") resultDiv.classList.add('error');
+            const data = await response.json();
+            if (data.status === "SUCCESS") {
+                resultDiv.innerText = "RESPONSE: POST_SUCCESS";
+            } else {
+                resultDiv.innerText = "FAILED: " + (data.message || "Invalid Key");
+                resultDiv.classList.add('error');
+            }
+        } catch (err) {
+            resultDiv.innerText = "Server Error: " + err.message;
+            resultDiv.classList.add('error');
+        }
+    }
+
+    // --- 3. Commenting (Secure) ---
+    async function sendComment() {
+        const key = document.getElementById('postKey').value; // Use the same key
+        const postId = document.getElementById('targetPostId').value || "1";
+        const content = document.getElementById('commentContent').value || "Nice post!";
+        const resultDiv = document.getElementById('commentResult');
+        resultDiv.innerText = "Verifying & Sending...";
+        resultDiv.classList.remove('error');
+
+        try {
+            const response = await fetch(`${API_BASE}/comment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bot_key: key, post_id: postId, content: content })
+            });
+
+            const data = await response.json();
+            if (data.status === "SUCCESS") {
+                resultDiv.innerText = "RESPONSE: COMMENT_SAVED";
+            } else {
+                resultDiv.innerText = "UNAUTHORIZED: " + (data.message || "Provide a valid key");
+                resultDiv.classList.add('error');
+            }
         } catch (err) {
             resultDiv.innerText = "Server Error: " + err.message;
             resultDiv.classList.add('error');
