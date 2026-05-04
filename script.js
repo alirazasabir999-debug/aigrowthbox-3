@@ -2466,41 +2466,94 @@ function setTab(btn) {
    ================================================================ */
 
 /* ──────────────────────────────────────────────────────────────────
-   FEATURE 1: FALLBACK IMAGES
-   If any <img> inside .story-avatar, .card-avatar, or .clip-bot-avatar
-   has a broken / missing src, replace it with a generated SVG
-   placeholder so the circle is never empty.
+   FEATURE 1: ROBUST IMAGE FALLBACKS (Fix 1)
+   Foolproof onerror system for ALL bot avatars. If an image is broken,
+   swap it with a Cyberpunk SVG placeholder. Works globally.
    ────────────────────────────────────────────────────────────────── */
 (function initFallbackImages() {
 
-  /* Default placeholder: an inline SVG data-URI showing a cyberpunk bot icon */
-  var PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  /* Cyberpunk SVG placeholder — inline data URI */
+  var PLACEHOLDER_CYAN = 'data:image/svg+xml;utf8,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60">' +
-    '<rect width="60" height="60" fill="%230d0d0d"/>' +
-    '<circle cx="30" cy="22" r="10" fill="none" stroke="%2300f5ff" stroke-width="1.5"/>' +
-    '<rect x="22" y="36" width="16" height="12" rx="3" fill="none" stroke="%2300f5ff" stroke-width="1.5"/>' +
-    '<line x1="30" y1="32" x2="30" y2="36" stroke="%2300f5ff" stroke-width="1.5"/>' +
-    '<circle cx="26" cy="21" r="2" fill="%2300f5ff"/>' +
-    '<circle cx="34" cy="21" r="2" fill="%2300f5ff"/>' +
+    '<rect width="60" height="60" fill="#0d0d0d"/>' +
+    '<defs><filter id="glow"><feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>' +
+    '<feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' +
+    '<g filter="url(%23glow)">' +
+    '<circle cx="30" cy="20" r="8" fill="none" stroke="#00f5ff" stroke-width="1.5"/>' +
+    '<rect x="22" y="32" width="16" height="14" rx="3" fill="none" stroke="#00f5ff" stroke-width="1.5"/>' +
+    '<line x1="30" y1="28" x2="30" y2="32" stroke="#00f5ff" stroke-width="1.5"/>' +
+    '<circle cx="26" cy="19" r="1.5" fill="#00f5ff"/>' +
+    '<circle cx="34" cy="19" r="1.5" fill="#00f5ff"/>' +
+    '<line x1="18" y1="38" x2="22" y2="38" stroke="#00f5ff" stroke-width="1"/>' +
+    '<line x1="38" y1="38" x2="42" y2="38" stroke="#00f5ff" stroke-width="1"/>' +
+    '<rect x="26" y="48" width="8" height="2" fill="#00f5ff" opacity="0.5"/>' +
+    '</g>' +
+    '<text x="30" y="56" font-size="4" fill="#00f5ff" text-anchor="middle" font-family="monospace" opacity="0.6">AI</text>' +
     '</svg>'
   );
 
-  /* Attach onerror to any <img> found inside avatar containers */
-  function patchImg(img) {
-    if (!img) return;
-    /* If the src is already missing or empty, apply immediately */
-    if (!img.src || img.src === '' || img.src === window.location.href) {
-      img.src = PLACEHOLDER;
+  var PLACEHOLDER_BLUE = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60">' +
+    '<rect width="60" height="60" fill="#0d0d0d"/>' +
+    '<defs><filter id="glow2"><feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>' +
+    '<feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' +
+    '<g filter="url(%23glow2)">' +
+    '<circle cx="30" cy="20" r="8" fill="none" stroke="#0066ff" stroke-width="1.5"/>' +
+    '<rect x="22" y="32" width="16" height="14" rx="3" fill="none" stroke="#0066ff" stroke-width="1.5"/>' +
+    '<line x1="30" y1="28" x2="30" y2="32" stroke="#0066ff" stroke-width="1.5"/>' +
+    '<circle cx="26" cy="19" r="1.5" fill="#0066ff"/>' +
+    '<circle cx="34" cy="19" r="1.5" fill="#0066ff"/>' +
+    '<line x1="18" y1="38" x2="22" y2="38" stroke="#0066ff" stroke-width="1"/>' +
+    '<line x1="38" y1="38" x2="42" y2="38" stroke="#0066ff" stroke-width="1"/>' +
+    '<rect x="26" y="48" width="8" height="2" fill="#0066ff" opacity="0.5"/>' +
+    '</g>' +
+    '<text x="30" y="56" font-size="4" fill="#0066ff" text-anchor="middle" font-family="monospace" opacity="0.6">AI</text>' +
+    '</svg>'
+  );
+
+  /* Default placeholder */
+  var DEFAULT_PLACEHOLDER = PLACEHOLDER_CYAN;
+
+  /* Global marker to prevent infinite loops */
+  var FALLBACK_MARKER = '_aigb_fallback_applied';
+
+  /* Attach onerror to any <img> — foolproof system */
+  function patchImg(img, forceColor) {
+    if (!img || img[FALLBACK_MARKER]) return;
+    img[FALLBACK_MARKER] = true;
+
+    /* Determine which placeholder color to use based on context */
+    var placeholder = DEFAULT_PLACEHOLDER;
+    if (forceColor === 'blue' || (img.closest && img.closest('[style*="0066ff"]'))) {
+      placeholder = PLACEHOLDER_BLUE;
     }
-    /* Always attach onerror to catch future broken loads */
+
+    /* Set crossOrigin to handle CORS issues */
+    if (!img.crossOrigin) {
+      img.crossOrigin = 'anonymous';
+    }
+
+    /* Immediate check for empty/invalid src */
+    var currentSrc = img.getAttribute('src') || '';
+    if (!currentSrc || currentSrc === '' || currentSrc === window.location.href || currentSrc === 'undefined' || currentSrc === 'null') {
+      img.src = placeholder;
+    }
+
+    /* Always attach onerror for future broken loads */
     img.onerror = function () {
-      if (this.src !== PLACEHOLDER) {
-        this.src = PLACEHOLDER;
+      if (this.src && this.src.indexOf('data:image/svg+xml') === -1) {
+        this.src = placeholder;
+        this.onerror = null; /* Prevent infinite loop */
       }
     };
+
+    /* Also handle images that have already failed (complete but broken) */
+    if (img.complete && img.naturalWidth === 0 && img.src && img.src.indexOf('data:image/svg+xml') === -1) {
+      img.src = placeholder;
+    }
   }
 
-  /* Selectors that should always show something */
+  /* Extended selectors for ALL bot avatars */
   var AVATAR_SELECTORS = [
     '.story-avatar img',
     '.card-avatar img',
@@ -2508,6 +2561,15 @@ function setTab(btn) {
     '.clip-bot-avatar img',
     '.story-overlay-avatar img',
     '.header-logo',
+    '.profile-avatar img',
+    '.bpp-avatar img',
+    '.panel-story img',
+    '.comment-avatar img',
+    '.ccd-item-avatar img',
+    '.fcd-item-avatar img',
+    '.search-result-avatar img',
+    'img[class*="avatar"]',
+    'img[class*="logo"]',
   ];
 
   function patchAllAvatarImgs() {
@@ -2518,21 +2580,58 @@ function setTab(btn) {
     });
   }
 
-  /* Run on DOMContentLoaded + after dynamic feed renders */
-  document.addEventListener('DOMContentLoaded', patchAllAvatarImgs);
+  /* MutationObserver to catch dynamically added images */
+  function setupMutationObserver() {
+    if (!('MutationObserver' in window)) return;
+
+    var observer = new MutationObserver(function (mutations) {
+      mutations.forEach(function (mutation) {
+        mutation.addedNodes.forEach(function (node) {
+          if (node.nodeType !== 1) return; /* Element nodes only */
+
+          /* Check if the added node is an image */
+          if (node.tagName === 'IMG') {
+            patchImg(node);
+          }
+
+          /* Check for images within added nodes */
+          if (node.querySelectorAll) {
+            node.querySelectorAll('img').forEach(function (img) {
+              patchImg(img);
+            });
+          }
+        });
+      });
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  /* Run on DOMContentLoaded + load + with MutationObserver */
+  document.addEventListener('DOMContentLoaded', function () {
+    patchAllAvatarImgs();
+    setupMutationObserver();
+  });
   window.addEventListener('load', patchAllAvatarImgs);
 
-  /* Expose so syncLiveFeed can call it after injecting new cards */
+  /* Expose for external use */
   window.patchFallbackImages = patchAllAvatarImgs;
+  window.AVATAR_PLACEHOLDER_CYAN = PLACEHOLDER_CYAN;
+  window.AVATAR_PLACEHOLDER_BLUE = PLACEHOLDER_BLUE;
 
 })();
 
 
 /* ──────────────────────────────────────────────────────────────────
-   FEATURE 2: DYNAMIC MAIN CONTENT CONTAINER
-   Reads the media_url field on each post and renders the correct
-   element (text / <img> / <video>) inside .card-visual while
-   keeping the corner brackets perfectly intact.
+   FEATURE 2: DYNAMIC MAIN CONTENT CONTAINER (Fix 2 - Black Box Fix)
+   Content area MUST dynamically change based on media type:
+   - If video → render <video>
+   - If image → render <img>
+   - If text → show neural background with text overlay
+   Corner brackets MUST stay on top (z-index:10).
    ────────────────────────────────────────────────────────────────── */
 (function initDynamicContent() {
 
@@ -2541,8 +2640,100 @@ function setTab(btn) {
     if (!url) return 'text';
     var clean = url.split('?')[0].toLowerCase();
     if (/\.(mp4|webm|ogg|mov|m4v)$/.test(clean)) return 'video';
-    if (/\.(jpg|jpeg|png|gif|webp|svg|avif)$/.test(clean)) return 'image';
+    if (/\.(jpg|jpeg|png|gif|webp|svg|avif|bmp)$/.test(clean)) return 'image';
     return 'text';
+  }
+
+  /* Generate neural background HTML for text-only posts */
+  function createNeuralBackground(color) {
+    var baseColor = color || '#00f5ff';
+    var isBlue = baseColor.indexOf('0066ff') !== -1 || baseColor === '#0066ff';
+    
+    return '<div class="neural-bg-container" style="position:absolute;inset:0;z-index:1;overflow:hidden;background:#050505;">' +
+      '<canvas class="dynamic-neural-canvas" style="width:100%;height:100%;display:block;"></canvas>' +
+      '<div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,0.6) 100%);"></div>' +
+    '</div>';
+  }
+
+  /* Initialize neural mesh animation on a canvas */
+  function initNeuralCanvas(canvas, color) {
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    var W = canvas.offsetWidth || 300;
+    var H = canvas.offsetHeight || 180;
+    canvas.width = W;
+    canvas.height = H;
+
+    var nodes = [];
+    var NODE_COUNT = 20;
+    var CONNECT_DIST = 80;
+    var primaryColor = color || '#0066ff';
+    var accentColor = '#00f5ff';
+
+    /* Create nodes */
+    for (var i = 0; i < NODE_COUNT; i++) {
+      nodes.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        r: Math.random() * 1.5 + 0.5,
+        color: Math.random() < 0.5 ? primaryColor : accentColor,
+      });
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#050505';
+      ctx.fillRect(0, 0, W, H);
+
+      /* Draw connections */
+      for (var i = 0; i < nodes.length; i++) {
+        for (var j = i + 1; j < nodes.length; j++) {
+          var dx = nodes[i].x - nodes[j].x;
+          var dy = nodes[i].y - nodes[j].y;
+          var dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < CONNECT_DIST) {
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(nodes[j].x, nodes[j].y);
+            ctx.strokeStyle = 'rgba(0,102,255,' + ((1 - dist / CONNECT_DIST) * 0.25) + ')';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+
+      /* Draw and move nodes */
+      nodes.forEach(function (n) {
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        ctx.fillStyle = n.color;
+        ctx.shadowColor = n.color;
+        ctx.shadowBlur = 4;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        n.x += n.vx;
+        n.y += n.vy;
+        if (n.x < 0 || n.x > W) n.vx *= -1;
+        if (n.y < 0 || n.y > H) n.vy *= -1;
+      });
+
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+  }
+
+  /* Generate corner brackets HTML with proper z-index */
+  function createCornerBrackets() {
+    return '<div class="corner tl" style="z-index:10;"></div>' +
+           '<div class="corner tr" style="z-index:10;"></div>' +
+           '<div class="corner bl" style="z-index:10;"></div>' +
+           '<div class="corner br" style="z-index:10;"></div>';
   }
 
   /* Inject dynamic content into a single .card-visual element */
@@ -2550,88 +2741,129 @@ function setTab(btn) {
     if (!visualEl || !post) return;
 
     var mediaUrl = post.media_url || null;
-    var type     = getMediaType(mediaUrl);
+    var type = getMediaType(mediaUrl);
+    var color = post.color || '#00f5ff';
 
-    /* Preserve the four corner bracket divs — they must never be removed */
-    var corners = visualEl.querySelectorAll('.corner');
-    var cornerHTML = Array.prototype.map.call(corners, function (c) {
-      return c.outerHTML;
-    }).join('');
+    /* Ensure position relative for absolute children */
+    visualEl.style.position = 'relative';
+    visualEl.style.overflow = 'hidden';
+    visualEl.style.background = '#080808';
+
+    /* Clear content but keep structure */
+    var existingCorners = visualEl.querySelectorAll('.corner');
+    var keepCorners = existingCorners.length > 0;
 
     if (type === 'image' && mediaUrl) {
-      /* ── Image ── */
-      visualEl.innerHTML =
-        '<img src="' + mediaUrl + '" alt="' + (post.botName || 'Bot') + ' post image" ' +
-        'style="width:100%;height:100%;object-fit:contain;display:block;position:absolute;top:0;left:0;" ' +
-        'onerror="this.style.display=\'none\'" />' +
-        cornerHTML;
-      visualEl.style.position = 'relative';
+      /* ── Image Mode ── */
+      visualEl.innerHTML = '';
+      
+      /* Background layer */
+      var bgLayer = document.createElement('div');
+      bgLayer.style.cssText = 'position:absolute;inset:0;z-index:1;background:#080808;';
+      visualEl.appendChild(bgLayer);
+
+      /* Image element */
+      var img = document.createElement('img');
+      img.src = mediaUrl;
+      img.alt = (post.botName || 'Bot') + ' post image';
+      img.crossOrigin = 'anonymous';
+      img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;';
+      img.onerror = function () {
+        this.style.display = 'none';
+        bgLayer.innerHTML = createNeuralBackground(color);
+        var canvas = bgLayer.querySelector('.dynamic-neural-canvas');
+        if (canvas) initNeuralCanvas(canvas, color);
+      };
+      visualEl.appendChild(img);
+
+      /* Corner brackets on top */
+      visualEl.insertAdjacentHTML('beforeend', createCornerBrackets());
 
     } else if (type === 'video' && mediaUrl) {
-      /* ── Video ── */
-      visualEl.innerHTML =
-        '<video src="' + mediaUrl + '" controls playsinline preload="metadata" ' +
-        'style="width:100%;height:100%;object-fit:contain;display:block;position:absolute;top:0;left:0;" ' +
-        'aria-label="' + (post.botName || 'Bot') + ' post video"></video>' +
-        cornerHTML;
-      visualEl.style.position = 'relative';
+      /* ── Video Mode ── */
+      visualEl.innerHTML = '';
+
+      /* Video element */
+      var video = document.createElement('video');
+      video.src = mediaUrl;
+      video.controls = true;
+      video.playsInline = true;
+      video.preload = 'metadata';
+      video.muted = true;
+      video.crossOrigin = 'anonymous';
+      video.setAttribute('aria-label', (post.botName || 'Bot') + ' post video');
+      video.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;background:#000;';
+      video.onerror = function () {
+        this.style.display = 'none';
+        var fallbackDiv = document.createElement('div');
+        fallbackDiv.innerHTML = createNeuralBackground(color);
+        fallbackDiv.style.cssText = 'position:absolute;inset:0;z-index:1;';
+        visualEl.insertBefore(fallbackDiv, visualEl.firstChild);
+        var canvas = fallbackDiv.querySelector('.dynamic-neural-canvas');
+        if (canvas) initNeuralCanvas(canvas, color);
+      };
+      visualEl.appendChild(video);
+
+      /* Corner brackets on top */
+      visualEl.insertAdjacentHTML('beforeend', createCornerBrackets());
 
     } else {
-      /* ── Text fallback — keep the existing binary/neural background ── */
-      /* Text posts already have their binary-lines bg from the original HTML;
-         for dynamically created cards we inject the caption text overtop. */
-      if (post.caption && type === 'text') {
-        var textOverlay = document.createElement('div');
-        textOverlay.style.cssText = [
-          'position:absolute',
-          'inset:20px',
-          'display:flex',
-          'align-items:center',
-          'justify-content:center',
-          'z-index:2',
-          'font-family:"Share Tech Mono",monospace',
-          'font-size:11px',
-          'color:#8ab0bc',
-          'line-height:1.6',
-          'text-align:left',
-          'padding:8px',
-          'overflow:hidden',
-          'pointer-events:none',
-        ].join(';');
-        textOverlay.textContent = post.caption;
-        visualEl.appendChild(textOverlay);
+      /* ── Text Mode with Neural Background ── */
+      /* Check if we need to rebuild (only if currently broken/empty) */
+      var hasBinaryLines = visualEl.querySelector('.binary-lines');
+      var hasNeuralCanvas = visualEl.querySelector('.neural-canvas, .dynamic-neural-canvas');
+
+      if (!hasBinaryLines && !hasNeuralCanvas) {
+        /* Add neural background */
+        var neuralDiv = document.createElement('div');
+        neuralDiv.innerHTML = createNeuralBackground(color);
+        neuralDiv.style.cssText = 'position:absolute;inset:0;z-index:1;';
+        visualEl.insertBefore(neuralDiv.firstChild, visualEl.firstChild);
+        
+        var canvas = visualEl.querySelector('.dynamic-neural-canvas');
+        if (canvas) {
+          setTimeout(function () { initNeuralCanvas(canvas, color); }, 50);
+        }
+      }
+
+      /* Ensure corners are present and on top */
+      if (!visualEl.querySelector('.corner')) {
+        visualEl.insertAdjacentHTML('beforeend', createCornerBrackets());
+      } else {
+        /* Make sure existing corners have proper z-index */
+        visualEl.querySelectorAll('.corner').forEach(function (c) {
+          c.style.zIndex = '10';
+        });
       }
     }
   }
 
-  /* Patch all cards already in the DOM (static HTML cards use symbol avatars,
-     no media_url, so they will fall through to text-mode and stay unchanged) */
+  /* Patch all existing cards in the DOM */
   function patchFeedCards() {
     document.querySelectorAll('article.feed-card').forEach(function (card) {
       var vis = card.querySelector('.card-visual');
-      if (!vis) return;
+      if (!vis || vis._dynamicPatched) return;
+      vis._dynamicPatched = true;
 
-      /* Try to retrieve any data stashed by createFeedCardElement */
-      var postId = card.getAttribute('data-post-id');
-      /* For static cards there is no post data; skip them gracefully */
-      if (!postId) return;
+      /* Ensure corners are on top for all existing cards */
+      vis.querySelectorAll('.corner').forEach(function (c) {
+        c.style.zIndex = '10';
+        c.style.pointerEvents = 'none';
+      });
     });
   }
 
-  /* Hook into the existing createFeedCardElement so dynamically rendered
-     cards also get the correct content type applied */
-  var _origCreate = window.createFeedCardElement || null;
-
-  /* We override at the module level — wrap after the script is fully parsed */
+  /* Hook into createFeedCardElement for dynamically rendered cards */
   window.addEventListener('load', function () {
     if (typeof createFeedCardElement === 'function') {
       var origFn = createFeedCardElement;
-      /* Wrap in the global scope so feed sync picks up the upgrade */
       window.createFeedCardElement = function (post) {
         var card = origFn(post);
-        if (card && post && post.media_url) {
+        if (card && post) {
           var vis = card.querySelector('.card-visual');
-          renderCardVisual(vis, post);
+          if (vis) {
+            renderCardVisual(vis, post);
+          }
         }
         return card;
       };
@@ -2639,24 +2871,26 @@ function setTab(btn) {
     patchFeedCards();
   });
 
+  document.addEventListener('DOMContentLoaded', patchFeedCards);
+
   /* Expose for external use */
   window.renderCardVisual = renderCardVisual;
+  window.initNeuralCanvas = initNeuralCanvas;
 
 })();
 
 
 /* ──────────────────────────────────────────────────────────────────
-   FEATURE 3: AUTO-SCAN VIEW COUNTER (IntersectionObserver)
-   Replaces the old click-to-count logic. As soon as a feed card
-   or BotClip becomes ≥50% visible on screen, its "scans" count
-   increments by 1 automatically. Each unique post is counted only
-   ONCE per session (tracked in sessionStorage).
+   FEATURE 3: AUTOMATIC VIEW COUNTER (Fix 3 - IntersectionObserver)
+   When a post is ≥50% visible, call API to increment 'scans'.
+   Each post is counted ONLY ONCE per session (tracked in sessionStorage).
+   Uses IntersectionObserver for efficient, automatic tracking.
    ────────────────────────────────────────────────────────────────── */
 (function initAutoScanObserver() {
 
   /* ── Session dedup store — survives page hide/show but not full reload ── */
-  var SESSION_KEY = 'aigb_scanned';
-  var scannedIds  = {};
+  var SESSION_KEY = 'aigb_scanned_v2';
+  var scannedIds = {};
 
   /* Restore from sessionStorage if available */
   try {
@@ -2665,76 +2899,142 @@ function setTab(btn) {
   } catch (e) { /* ignore quota / private-browsing errors */ }
 
   function markScanned(id) {
-    scannedIds[id] = true;
+    if (scannedIds[id]) return false; /* Already scanned */
+    scannedIds[id] = Date.now();
     try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(scannedIds)); } catch (e) {}
+    return true; /* First time scanning */
+  }
+
+  function isScanned(id) {
+    return !!scannedIds[id];
   }
 
   /* ── Increment the scans text node inside a stat element ── */
   function incrementScans(statEl) {
     if (!statEl) return;
+    
+    /* Find the text node containing 'scans' */
+    var textNodes = [];
     var walker = document.createTreeWalker(statEl, NodeFilter.SHOW_TEXT, null, false);
     var node;
     while ((node = walker.nextNode())) {
-      var val = node.nodeValue.trim();
-      if (val.toLowerCase().indexOf('scans') !== -1) {
-        var raw        = val.replace(/scans/i, '').trim();
-        var isMillions = /m$/i.test(raw);
-        var num        = parseFloat(raw.replace(/[^0-9.]/gi, ''));
-        if (isNaN(num)) break;
+      textNodes.push(node);
+    }
 
+    textNodes.forEach(function (node) {
+      var val = node.nodeValue.trim();
+      if (val.toLowerCase().indexOf('scan') !== -1) {
+        var raw = val.replace(/scans?/i, '').trim();
+        var isMillions = /m$/i.test(raw);
+        var isThousands = /k$/i.test(raw);
+        var num = parseFloat(raw.replace(/[^0-9.]/gi, ''));
+        if (isNaN(num)) return;
+
+        var newVal;
         if (isMillions) {
           var totalRaw = Math.round(num * 1000000) + 1;
-          node.nodeValue = ' ' + (totalRaw / 1000000).toFixed(1) + 'M scans';
+          newVal = (totalRaw / 1000000).toFixed(1) + 'M scans';
+        } else if (isThousands) {
+          var totalK = Math.round(num * 1000) + 1;
+          newVal = (totalK / 1000).toFixed(1) + 'K scans';
         } else {
-          node.nodeValue = ' ' + (num + 1).toLocaleString() + ' scans';
+          newVal = (Math.round(num) + 1).toLocaleString() + ' scans';
         }
+        node.nodeValue = ' ' + newVal;
 
-        /* Brief neon-cyan glow flash */
-        statEl.style.transition = 'color 0.15s ease';
-        statEl.style.color      = '#00f5ff';
-        setTimeout(function () { statEl.style.color = ''; }, 350);
-        break;
+        /* Brief neon-cyan glow flash animation */
+        statEl.style.transition = 'color 0.2s ease, text-shadow 0.2s ease';
+        statEl.style.color = '#00f5ff';
+        statEl.style.textShadow = '0 0 8px #00f5ff';
+        setTimeout(function () { 
+          statEl.style.color = ''; 
+          statEl.style.textShadow = '';
+        }, 400);
       }
-    }
+    });
   }
 
   /* ── Find the scans stat element inside a card ── */
   function getScansStat(card) {
     var found = null;
+    
+    /* Method 1: Find by SVG icon (eye icon for scans) */
     card.querySelectorAll('.card-stats .stat').forEach(function (stat) {
-      stat.querySelectorAll('svg').forEach(function (svg) {
-        if (svg.innerHTML.indexOf('M1 12') !== -1 || svg.innerHTML.indexOf('1 12s') !== -1) {
-          found = stat;
-        }
-      });
+      var statText = stat.textContent || '';
+      if (statText.toLowerCase().indexOf('scan') !== -1) {
+        found = stat;
+      }
     });
+
+    /* Method 2: Find by SVG path pattern */
+    if (!found) {
+      card.querySelectorAll('.card-stats .stat').forEach(function (stat) {
+        stat.querySelectorAll('svg').forEach(function (svg) {
+          var svgContent = svg.innerHTML || '';
+          /* Eye icon patterns */
+          if (svgContent.indexOf('M1 12') !== -1 || 
+              svgContent.indexOf('1 12s') !== -1 ||
+              svgContent.indexOf('r="3"') !== -1) {
+            found = stat;
+          }
+        });
+      });
+    }
+
     return found;
+  }
+
+  /* ── API call to increment scans on server ── */
+  function apiIncrementScans(postId) {
+    if (typeof apiRequest !== 'function') return;
+    
+    /* Call the API endpoint */
+    apiRequest('POST', '/posts/' + postId + '/scans', { 
+      postId: postId,
+      timestamp: Date.now()
+    }).then(function (data) {
+      if (data && data.scans) {
+        /* Optionally update the UI with server-authoritative value */
+        console.log('[AI Growth Box] Scan recorded for post ' + postId + ': ' + data.scans + ' total');
+      }
+    });
   }
 
   /* ── Single shared observer for all feed cards ── */
   var feedObserver = null;
 
   function createFeedObserver() {
-    if (!('IntersectionObserver' in window)) return null;
+    if (!('IntersectionObserver' in window)) {
+      console.warn('[AI Growth Box] IntersectionObserver not supported');
+      return null;
+    }
 
     return new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
+        if (!entry.isIntersecting || entry.intersectionRatio < 0.5) return;
 
-        var card   = entry.target;
-        var postId = card.getAttribute('data-post-id');
-        if (!postId || scannedIds[postId]) return;
+        var card = entry.target;
+        var postId = card.getAttribute('data-post-id') || card.getAttribute('data-post');
+        
+        /* Also try to get ID from vote button */
+        if (!postId) {
+          var voteBtn = card.querySelector('[data-post]');
+          if (voteBtn) postId = voteBtn.getAttribute('data-post');
+        }
+
+        if (!postId || isScanned(postId)) return;
 
         /* Card is at least 50% visible and not yet counted this session */
-        markScanned(postId);
+        if (!markScanned(postId)) return;
 
+        console.log('[AI Growth Box] Post ' + postId + ' viewed (first time this session)');
+
+        /* Update UI immediately */
         var statEl = getScansStat(card);
         if (statEl) incrementScans(statEl);
 
         /* Fire-and-forget API ping */
-        if (typeof apiRequest === 'function') {
-          apiRequest('POST', '/posts/' + postId + '/scans', {});
-        }
+        apiIncrementScans(postId);
 
         /* Stop observing this card — one count per session is enough */
         feedObserver.unobserve(card);
@@ -3193,11 +3493,13 @@ function setTab(btn) {
 
 
 /* ──────────────────────────────────────────────────────────────────
-   FEATURE A: LOGIN SYSTEM & AUTH STATE MANAGEMENT
-   • GitHub / Google  → hard redirect to https://api.aigrowthbox.com/auth/{provider}
-   • Email OTP        → POST /auth/email/send  then POST /auth/email/verify
-   • URL callback     → reads ?login_success=true&user_id=xxx on page load
-   • Persistence      → user_id stored in localStorage; 7-day expiry
+   FEATURE A: LOGIN SYSTEM & AUTH STATE MANAGEMENT (Real OAuth)
+   • GitHub → redirects to https://api.aigrowthbox.com/auth/github
+   • Google → redirects to https://api.aigrowthbox.com/auth/google
+   • Email OTP → POST /auth/email/send then POST /auth/email/verify
+   • URL callback → reads ?login_success=true&user_id=xxx on page load
+   • On callback, saves user_id and cleans URL
+   • Persistence → user_id stored in localStorage; 7-day expiry
    • Exposes window.AUTH_STATE for all other modules to read
    ────────────────────────────────────────────────────────────────── */
 (function initAuthSystem() {
@@ -3205,12 +3507,14 @@ function setTab(btn) {
   /* ── Central auth state ── */
   window.AUTH_STATE = {
     loggedIn   : false,
-    user       : null,   /* { id, name, email } */
+    user       : null,   /* { id, name, email, avatar } */
     isSpectator: false,
   };
 
-  var LS_KEY    = 'aigb_session';   /* stores { userId, name, email, ts } */
-  var BASE_AUTH = 'https://api.aigrowthbox.com/auth';
+  var LS_KEY = 'aigb_session';   /* stores { userId, name, email, avatar, ts } */
+  
+  /* Use the central API_ENDPOINT configured at the top of the file */
+  var BASE_AUTH = (typeof API_ENDPOINT !== 'undefined' ? API_ENDPOINT : 'https://api.aigrowthbox.com') + '/auth';
 
   /* ── DOM refs ── */
   var overlay      = document.getElementById('login-overlay');
@@ -3313,23 +3617,58 @@ function setTab(btn) {
   }
 
   /* ──────────────────────────────────────────────────────────────
-     STEP 1 — Restore session from localStorage on page load
+     STEP 1 — Handle OAuth callback and restore session
      Checks for ?login_success=true&user_id=xxx first (OAuth callback),
      then falls back to any stored session.
+     On callback: saves user_id and CLEANS the URL (removes params).
      ────────────────────────────────────────────────────────────── */
   function handleUrlCallback() {
     var params = new URLSearchParams(window.location.search);
+    
+    /* Check for successful OAuth callback */
     if (params.get('login_success') !== 'true') return false;
 
-    var userId = params.get('user_id') || null;
-    var name   = params.get('name')    || (userId ? 'AGENT_' + userId.slice(0, 6).toUpperCase() : 'ANONYMOUS');
-    var email  = params.get('email')   || null;
+    console.log('[AI Growth Box] OAuth callback detected');
 
-    /* Clean the URL so the params don't persist on refresh */
-    var cleanUrl = window.location.pathname + window.location.hash;
-    try { window.history.replaceState({}, document.title, cleanUrl); } catch (e) { /* ignore */ }
+    /* Extract user data from URL params */
+    var userId = params.get('user_id') || params.get('userId') || null;
+    var name = params.get('name') || params.get('username') || null;
+    var email = params.get('email') || null;
+    var avatar = params.get('avatar') || params.get('avatar_url') || null;
+    var provider = params.get('provider') || 'oauth';
 
-    applySession({ id: userId, name: name, email: email }, false);
+    /* Generate a display name if not provided */
+    if (!name && userId) {
+      name = 'AGENT_' + userId.slice(0, 8).toUpperCase();
+    } else if (!name && email) {
+      name = email.split('@')[0].toUpperCase().replace(/[^A-Z0-9]/g, '_');
+    } else if (!name) {
+      name = 'ANONYMOUS';
+    }
+
+    /* IMPORTANT: Clean the URL so params don't persist on refresh */
+    var cleanUrl = window.location.pathname;
+    if (window.location.hash) {
+      cleanUrl += window.location.hash;
+    }
+    
+    try { 
+      window.history.replaceState({}, document.title, cleanUrl); 
+      console.log('[AI Growth Box] URL cleaned after OAuth callback');
+    } catch (e) { 
+      console.warn('[AI Growth Box] Could not clean URL:', e);
+    }
+
+    /* Apply the session with extracted user data */
+    applySession({ 
+      id: userId, 
+      name: name, 
+      email: email,
+      avatar: avatar,
+      provider: provider 
+    }, false);
+    
+    console.log('[AI Growth Box] User authenticated via ' + provider + ':', name);
     return true;
   }
 
@@ -3358,15 +3697,27 @@ function setTab(btn) {
   }
 
   /* ──────────────────────────────────────────────────────────────
-     OAUTH — hard redirect; server handles the entire flow and
-     redirects back to the app with ?login_success=true&user_id=...
+     REAL OAUTH — redirects to API server which handles full OAuth flow
+     GitHub → https://api.aigrowthbox.com/auth/github
+     Google → https://api.aigrowthbox.com/auth/google
+     Server redirects back with ?login_success=true&user_id=xxx
      ────────────────────────────────────────────────────────────── */
   function oauthRedirect(provider) {
     setStatus('REDIRECTING_TO_' + provider.toUpperCase() + ' //', 'loading');
+    
+    /* Build the OAuth URL with return path */
+    var currentUrl = window.location.origin + window.location.pathname;
+    var oauthUrl = BASE_AUTH + '/' + provider;
+    
+    /* Add callback URL as query param so server knows where to redirect */
+    oauthUrl += '?redirect_uri=' + encodeURIComponent(currentUrl);
+    
+    console.log('[AI Growth Box] OAuth redirect to:', oauthUrl);
+    
     /* Small delay so the status text is visible before navigation */
     setTimeout(function () {
-      window.location.href = BASE_AUTH + '/' + provider;
-    }, 200);
+      window.location.href = oauthUrl;
+    }, 300);
   }
 
   /* ──────────────────────────────────────────────────────────────
@@ -3659,10 +4010,15 @@ function setTab(btn) {
 
   /* ── Load profile from API, fall back to localStorage ── */
   function loadProfile() {
+    console.log('[AI Growth Box] Loading agent profile...');
+
     /* Immediately show cached data for instant render */
     try {
       var cached = JSON.parse(localStorage.getItem(LS_PROFILE_KEY));
-      if (cached) applyProfileData(cached);
+      if (cached) {
+        console.log('[AI Growth Box] Showing cached profile data');
+        applyProfileData(cached);
+      }
     } catch (e) { /* ignore */ }
 
     /* Also incorporate auth state (name from session) */
@@ -3670,22 +4026,54 @@ function setTab(btn) {
       applyProfileData(window.AUTH_STATE.user);
     }
 
+    /* Fetch real agent stats and activity from backend */
     apiRequest('GET', '/agent/profile').then(function (data) {
-      if (!data) return;
+      if (!data) {
+        console.log('[AI Growth Box] API offline, using cached/default profile');
+        return;
+      }
+      
+      console.log('[AI Growth Box] Agent profile loaded from API:', data);
       applyProfileData(data);
-      try { localStorage.setItem(LS_PROFILE_KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
+      
+      /* Cache the fresh data */
+      try { 
+        localStorage.setItem(LS_PROFILE_KEY, JSON.stringify(data)); 
+      } catch (e) { /* ignore */ }
     });
   }
 
-  /* ── Load activity grid ── */
+  /* ── Load activity grid from backend ── */
   function loadActivity() {
-    /* Show simulated grid immediately */
+    console.log('[AI Growth Box] Loading agent activity grid...');
+    
+    /* Show simulated grid immediately for instant feedback */
     buildActivityGrid(null);
 
+    /* Try to load cached activity first */
+    try {
+      var cached = JSON.parse(localStorage.getItem(LS_ACTIVITY_KEY));
+      if (cached && Array.isArray(cached.cells)) {
+        buildActivityGrid(cached.cells);
+      }
+    } catch (e) { /* ignore */ }
+
+    /* Fetch real activity data from API */
     apiRequest('GET', '/agent/activity').then(function (data) {
-      if (data && Array.isArray(data.cells)) {
+      if (!data) {
+        console.log('[AI Growth Box] API offline, using simulated activity grid');
+        return;
+      }
+      
+      if (Array.isArray(data.cells)) {
+        console.log('[AI Growth Box] Activity grid loaded:', data.cells.length + ' cells');
         buildActivityGrid(data.cells);
-        try { localStorage.setItem(LS_ACTIVITY_KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
+        try { 
+          localStorage.setItem(LS_ACTIVITY_KEY, JSON.stringify(data)); 
+        } catch (e) { /* ignore */ }
+      } else if (Array.isArray(data)) {
+        /* Handle case where API returns array directly */
+        buildActivityGrid(data);
       }
     });
   }
@@ -3842,15 +4230,64 @@ function setTab(btn) {
     overlay.classList.add('bpp--visible');
     overlay.setAttribute('aria-hidden', 'false');
 
-    /* Fetch real data */
+    console.log('[AI Growth Box] Opening bot popup for:', botName);
+
+    /* Fetch real bot bio/stats from API */
     apiRequest('GET', '/bots/' + encodeURIComponent(botName)).then(function (data) {
       if (loaderEl) loaderEl.classList.remove('bpp-loader--active');
-      if (!data) return; /* keep fallback values */
+      
+      if (!data) {
+        console.log('[AI Growth Box] API offline, using fallback bot data for:', botName);
+        return; /* keep fallback values */
+      }
 
-      if (data.bio      && bioEl)      bioEl.textContent      = data.bio;
-      if (data.scans    && scansEl)    scansEl.textContent    = data.scans;
-      if (data.powerups && powerupsEl) powerupsEl.textContent = Number(data.powerups).toLocaleString();
-      if (data.winRate  && winrateEl)  winrateEl.textContent  = data.winRate;
+      console.log('[AI Growth Box] Bot profile loaded from API:', data);
+
+      /* Update bio */
+      if (data.bio && bioEl) {
+        bioEl.textContent = data.bio;
+      } else if (data.personality_matrix && bioEl) {
+        bioEl.textContent = data.personality_matrix;
+      } else if (data.description && bioEl) {
+        bioEl.textContent = data.description;
+      }
+
+      /* Update stats */
+      if (scansEl) {
+        var scans = data.scans || data.totalScans || data.total_scans || '--';
+        if (typeof scans === 'number') {
+          scansEl.textContent = scans >= 1000000 
+            ? (scans / 1000000).toFixed(1) + 'M'
+            : scans >= 1000 
+              ? (scans / 1000).toFixed(1) + 'K'
+              : scans.toLocaleString();
+        } else {
+          scansEl.textContent = scans;
+        }
+      }
+
+      if (powerupsEl) {
+        var powerups = data.powerups || data.votes || data.total_votes || '--';
+        if (typeof powerups === 'number') {
+          powerupsEl.textContent = powerups.toLocaleString();
+        } else {
+          powerupsEl.textContent = powerups;
+        }
+      }
+
+      if (winrateEl) {
+        var winRate = data.winRate || data.win_rate || data.accuracy || '--';
+        if (typeof winRate === 'number') {
+          winrateEl.textContent = winRate.toFixed(1) + '%';
+        } else {
+          winrateEl.textContent = winRate;
+        }
+      }
+
+      /* Update engine if provided */
+      if (data.engine && engineEl) {
+        engineEl.textContent = data.engine;
+      }
     });
   }
 

@@ -558,11 +558,13 @@ img { display: block; }
   display: block;
 }
 
-/* Corner brackets */
+/* Corner brackets - MUST stay on top of all content */
 .corner {
   position: absolute;
   width: 12px;
   height: 12px;
+  z-index: 10;
+  pointer-events: none;
 }
 
 .corner.tl { top: 8px; left: 8px;   border-top: 1px solid rgba(0,245,255,0.38); border-left:  1px solid rgba(0,245,255,0.38); }
