@@ -4012,41 +4012,47 @@ window.setTab = setTab;
 
   var isOpen = false;
 
-    /* ══════════════════════════════════════════════════════════════════
-     OAUTH PROFILE SYNC (IDs FIXED AS PER YOUR SCREENSHOT)
+     /* ══════════════════════════════════════════════════════════════════
+     OAUTH PROFILE SYNC (AVATAR FORCE-LOAD VERSION)
      ══════════════════════════════════════════════════════════════════ */
 
   function syncOAuthProfile() {
-    // Aapke screenshot ki IDs ke mutabiq sahi naam
     var avatarImg = document.getElementById('profile-avatar-img');
-    var symbol    = document.getElementById('profile-avatar-symbol'); // FIXED ID
-    var hDisplay  = document.getElementById('profile-handle-display'); // FIXED ID
+    var symbol    = document.getElementById('profile-avatar-symbol');
+    var hDisplay  = document.getElementById('profile-handle-display');
     
     var authState = window.AUTH_STATE || JSON.parse(localStorage.getItem('auth_state') || '{}');
     var user = authState.user || (authState.user_id ? authState : null);
 
     if (user) {
-      /* User mil gaya! Ab naam nikalte hain */
-      // Kuch systems 'agent' ya 'full_name' use karte hain, hum sab check karenge
       var displayName = user.full_name || user.agent || user.displayName || user.name || user.login || 'Neural Agent';
-      var photoUrl    = user.photoURL || user.avatar_url || user.picture || user.avatar;
+      
+      // گوگل فوٹو کے تمام ممکنہ نام
+      var photoUrl = user.photoURL || user.picture || user.avatar_url || user.avatar;
 
-      console.log('[AI Growth Box] Profile Sync Active for:', displayName);
-
-      // 1. Naam ko "ALI_RAZA_SABIR" format mein convert karna
       if (hDisplay) {
         hDisplay.textContent = displayName.toUpperCase().trim().replace(/\s+/g, '_');
       }
 
-      // 2. Photo lagana
       if (photoUrl && avatarImg) {
+        console.log('[AI Growth Box] Attempting to force load avatar...');
+        
+        // جادوئی لائن: لنک کے آخر میں ٹائم اسٹیمپ لگانا تاکہ براؤزر اسے نیا سمجھ کر لوڈ کرے
+        var forceUrl = photoUrl.includes('?') ? photoUrl + '&t=' + Date.now() : photoUrl + '?t=' + Date.now();
+        
         avatarImg.crossOrigin = 'anonymous';
-        avatarImg.src = photoUrl;
+        avatarImg.src = forceUrl; // زبردستی لوڈنگ
+        
         avatarImg.onload = function() {
+          console.log('[AI Growth Box] Avatar loaded successfully!');
           avatarImg.style.display = 'block';
+          avatarImg.style.opacity = '1';
+          avatarImg.style.visibility = 'visible';
           if (symbol) symbol.style.display = 'none';
         };
+
         avatarImg.onerror = function() {
+          console.log('[AI Growth Box] Avatar failed, using fallback.');
           avatarImg.style.display = 'none';
           if (symbol) {
             symbol.style.display = 'block';
@@ -4059,33 +4065,16 @@ window.setTab = setTab;
         symbol.textContent = displayName.charAt(0).toUpperCase();
       }
 
-      // 3. Login/Logout Buttons (Corrected IDs)
-      if (document.getElementById('profile-login-btn')) 
-          document.getElementById('profile-login-btn').style.display = 'none';
-      if (document.getElementById('profile-logout-btn')) 
-          document.getElementById('profile-logout-btn').style.display = 'block';
-      
-      var badge = document.getElementById('profile-provider-badge');
-      if (badge) {
-        badge.textContent = '[ CONNECTED VIA: ' + (user.provider || 'GOOGLE').toUpperCase() + ' ]';
-        badge.style.display = 'block';
+      // Buttons and Badge
+      if (document.getElementById('profile-login-btn')) document.getElementById('profile-login-btn').style.display = 'none';
+      if (document.getElementById('profile-logout-btn')) document.getElementById('profile-logout-btn').style.display = 'block';
+      if (document.getElementById('profile-provider-badge')) {
+          document.getElementById('profile-provider-badge').style.display = 'block';
+          document.getElementById('profile-provider-badge').textContent = '[ CONNECTED VIA: GOOGLE ]';
       }
-    } else {
-      /* User nahi hai */
-      if (hDisplay) hDisplay.textContent = 'AGENT_ANONYMOUS';
-      if (symbol) {
-        symbol.style.display = 'block';
-        symbol.textContent = '▲';
-      }
-      if (avatarImg) avatarImg.style.display = 'none';
-      if (document.getElementById('profile-login-btn')) 
-          document.getElementById('profile-login-btn').style.display = 'block';
-      if (document.getElementById('profile-logout-btn')) 
-          document.getElementById('profile-logout-btn').style.display = 'none';
     }
   }
    
-         
    
 
   /* ══════════��═══════════════════════════════════════════════════════
