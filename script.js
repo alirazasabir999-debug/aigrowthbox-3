@@ -3977,93 +3977,76 @@ window.setTab = setTab;
 
   var isOpen = false;
 
-  /* ═══════════════��══════════════════════════════════════════════════
-     OAUTH PROFILE SYNC
+    /* ══════════════════════════════════════════════════════════════════
+     OAUTH PROFILE SYNC (FIXED & SECURED)
      ══════════════════════════════════════════════════════════════════ */
 
   function syncOAuthProfile() {
-    var authState = window.AUTH_STATE;
+    // پکا کرنا کہ تمام ایلیمنٹس آئی ڈی سے مل جائیں
+    var avatarImg = document.getElementById('profile-avatar-img');
+    var symbol = document.getElementById('avatar-symbol');
+    var hDisplay = document.getElementById('handle-display');
+    
+    // ڈیٹا کو ونڈو یا لوکل سٹوریج دونوں جگہ سے چیک کرنا
+    var authState = window.AUTH_STATE || JSON.parse(localStorage.getItem('auth_state') || 'null');
     
     if (authState && authState.user) {
-      /* User IS logged in — show their REAL OAuth data */
       var user = authState.user;
       
-      /* STRICT FIELD MAPPING - Read from actual OAuth redirect params */
+      /* فیلڈ میپنگ: گوگل کے لیے picture اور گٹ ہب کے لیے avatar_url */
       var displayName = user.displayName || user.name || user.login || 'Unknown Agent';
-      /* Picture URL from OAuth redirect: avatar (parsed from params), photoURL (Google), avatar_url (GitHub), picture (generic) */
       var photoUrl = user.avatar || user.photoURL || user.avatar_url || user.picture;
 
-      /* DEBUG: Log what we're actually using */
-      console.log('[AI Growth Box] OAuth Profile Sync:', {
-        displayName: displayName,
-        photoUrl: photoUrl,
-        provider: user.provider,
-        rawUser: user
-      });
+      console.log('[AI Growth Box] Syncing Profile for:', displayName);
 
-      /* Update handle/name display with REAL name */
-      if (handleDisplay) {
-        handleDisplay.textContent = displayName.toUpperCase().replace(/ /g, '_');
+      if (hDisplay) {
+        hDisplay.textContent = displayName.toUpperCase().replace(/ /g, '_');
       }
 
-      /* Update avatar — MUST inject real photo URL */
-      if (photoUrl && profileAvatarImg) {
-        console.log('[AI Growth Box] Setting avatar image from URL:', photoUrl);
-        profileAvatarImg.src = photoUrl;
-        profileAvatarImg.crossOrigin = 'anonymous';
-        profileAvatarImg.style.display = 'block';  /* MUST show the image */
-        profileAvatarImg.style.objectFit = 'cover';
-        profileAvatarImg.style.width = '100%';
-        profileAvatarImg.style.height = '100%';
-        profileAvatarImg.style.borderRadius = '50%';
-        if (avatarSymbol) avatarSymbol.style.display = 'none';
+      /* تصویر کو زبردستی لوڈ کرنا */
+      if (photoUrl && avatarImg) {
+        avatarImg.crossOrigin = 'anonymous'; // اسے src سے پہلے آنا چاہیے
+        avatarImg.src = photoUrl;
         
-        /* Fallback if image fails to load */
-        profileAvatarImg.onerror = function () {
-          console.log('[AI Growth Box] Avatar image failed to load, showing fallback symbol');
-          profileAvatarImg.style.display = 'none';
-          if (avatarSymbol) {
-            avatarSymbol.style.display = 'block';
-            avatarSymbol.textContent = displayName.charAt(0).toUpperCase();
+        avatarImg.onload = function() {
+          avatarImg.style.display = 'block';
+          if (symbol) symbol.style.display = 'none';
+        };
+
+        /* اگر تصویر لوڈ نہ ہو تو پہلا حرف دکھانا */
+        avatarImg.onerror = function () {
+          avatarImg.style.display = 'none';
+          if (symbol) {
+            symbol.style.display = 'block';
+            symbol.textContent = displayName.charAt(0).toUpperCase();
           }
         };
-      } else {
-        /* No photo URL — show initial letter */
-        console.log('[AI Growth Box] No photo URL available, showing symbol with initial:', displayName.charAt(0));
-        if (profileAvatarImg) profileAvatarImg.style.display = 'none';
-        if (avatarSymbol) {
-          avatarSymbol.style.display = 'block';
-          avatarSymbol.textContent = displayName.charAt(0).toUpperCase();
-        }
+      } else if (symbol) {
+        if (avatarImg) avatarImg.style.display = 'none';
+        symbol.style.display = 'block';
+        symbol.textContent = displayName.charAt(0).toUpperCase();
       }
 
-      /* Update provider badge with OAuth provider */
-      var provider = (user.provider || 'OAUTH').toUpperCase();
-      if (providerBadge) {
-        providerBadge.textContent = '[ CONNECTED VIA: ' + provider + ' ]';
-        providerBadge.style.display = 'block';
+      if (document.getElementById('provider-badge')) {
+        document.getElementById('provider-badge').textContent = '[ CONNECTED VIA: ' + (user.provider || 'OAUTH').toUpperCase() + ' ]';
+        document.getElementById('provider-badge').style.display = 'block';
       }
 
-      /* Show logout button, hide login button */
-      if (loginBtn) loginBtn.style.display = 'none';
-      if (logoutBtn) logoutBtn.style.display = 'block';
+      if (document.getElementById('login-btn')) document.getElementById('login-btn').style.display = 'none';
+      if (document.getElementById('logout-btn')) document.getElementById('logout-btn').style.display = 'block';
     } else {
-      /* User NOT logged in — show minimal default state */
-      console.log('[AI Growth Box] User not logged in, showing anonymous state');
-      
-      if (handleDisplay) handleDisplay.textContent = 'AGENT_ANONYMOUS';
-      if (avatarSymbol) {
-        avatarSymbol.style.display = 'block';
-        avatarSymbol.textContent = '▲';
+      /* لاگ آؤٹ کی حالت */
+      if (hDisplay) hDisplay.textContent = 'AGENT_ANONYMOUS';
+      if (symbol) {
+        symbol.style.display = 'block';
+        symbol.textContent = '▲';
       }
-      if (profileAvatarImg) profileAvatarImg.style.display = 'none';
-      if (providerBadge) providerBadge.style.display = 'none';
-
-      /* Show login button, hide logout button */
-      if (loginBtn) loginBtn.style.display = 'block';
-      if (logoutBtn) logoutBtn.style.display = 'none';
+      if (avatarImg) avatarImg.style.display = 'none';
+      if (document.getElementById('login-btn')) document.getElementById('login-btn').style.display = 'block';
+      if (document.getElementById('logout-btn')) document.getElementById('logout-btn').style.display = 'none';
     }
   }
+   
 
   /* ══════════��═══════════════════════════════════════════════════════
      DASHBOARD VIEW SWITCHING
