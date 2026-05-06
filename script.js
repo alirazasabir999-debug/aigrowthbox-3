@@ -4012,32 +4012,33 @@ window.setTab = setTab;
 
   var isOpen = false;
 
-  /* ══════════════════════════════════════════════════════════════════
-     OAUTH PROFILE SYNC (POWERED VERSION)
+    /* ══════════════════════════════════════════════════════════════════
+     OAUTH PROFILE SYNC (IDs FIXED AS PER YOUR SCREENSHOT)
      ══════════════════════════════════════════════════════════════════ */
 
   function syncOAuthProfile() {
+    // Aapke screenshot ki IDs ke mutabiq sahi naam
     var avatarImg = document.getElementById('profile-avatar-img');
-    var symbol    = document.getElementById('avatar-symbol');
-    var hDisplay  = document.getElementById('handle-display');
+    var symbol    = document.getElementById('profile-avatar-symbol'); // FIXED ID
+    var hDisplay  = document.getElementById('profile-handle-display'); // FIXED ID
     
-    // ۱. ہر جگہ سے ڈیٹا چیک کرنا (Global Variable یا LocalStorage)
     var authState = window.AUTH_STATE || JSON.parse(localStorage.getItem('auth_state') || '{}');
     var user = authState.user || (authState.user_id ? authState : null);
 
     if (user) {
-      /* یوزر لاگ ان ہے — اب اس کا اصلی نام نکالنا */
-      var displayName = user.full_name || user.displayName || user.name || user.login || 'Neural Agent';
+      /* User mil gaya! Ab naam nikalte hain */
+      // Kuch systems 'agent' ya 'full_name' use karte hain, hum sab check karenge
+      var displayName = user.full_name || user.agent || user.displayName || user.name || user.login || 'Neural Agent';
       var photoUrl    = user.photoURL || user.avatar_url || user.picture || user.avatar;
 
-      console.log('[AI Growth Box] User Identified:', displayName);
+      console.log('[AI Growth Box] Profile Sync Active for:', displayName);
 
-      // اوپر والا نام اپ ڈیٹ کرنا (Uppercase اور Underscore کے ساتھ)
+      // 1. Naam ko "ALI_RAZA_SABIR" format mein convert karna
       if (hDisplay) {
         hDisplay.textContent = displayName.toUpperCase().trim().replace(/\s+/g, '_');
       }
 
-      // تصویر لگانا
+      // 2. Photo lagana
       if (photoUrl && avatarImg) {
         avatarImg.crossOrigin = 'anonymous';
         avatarImg.src = photoUrl;
@@ -4058,28 +4059,32 @@ window.setTab = setTab;
         symbol.textContent = displayName.charAt(0).toUpperCase();
       }
 
-      // بٹنز کی سیٹنگ
-      if (document.getElementById('login-btn')) document.getElementById('login-btn').style.display = 'none';
-      if (document.getElementById('logout-btn')) document.getElementById('logout-btn').style.display = 'block';
+      // 3. Login/Logout Buttons (Corrected IDs)
+      if (document.getElementById('profile-login-btn')) 
+          document.getElementById('profile-login-btn').style.display = 'none';
+      if (document.getElementById('profile-logout-btn')) 
+          document.getElementById('profile-logout-btn').style.display = 'block';
       
-      var badge = document.getElementById('provider-badge');
+      var badge = document.getElementById('profile-provider-badge');
       if (badge) {
         badge.textContent = '[ CONNECTED VIA: ' + (user.provider || 'GOOGLE').toUpperCase() + ' ]';
         badge.style.display = 'block';
       }
     } else {
-      /* اگر یوزر لاگ ان نہیں ہے */
-      console.log('[AI Growth Box] No active session found.');
+      /* User nahi hai */
       if (hDisplay) hDisplay.textContent = 'AGENT_ANONYMOUS';
       if (symbol) {
         symbol.style.display = 'block';
         symbol.textContent = '▲';
       }
       if (avatarImg) avatarImg.style.display = 'none';
-      if (document.getElementById('login-btn')) document.getElementById('login-btn').style.display = 'block';
-      if (document.getElementById('logout-btn')) document.getElementById('logout-btn').style.display = 'none';
+      if (document.getElementById('profile-login-btn')) 
+          document.getElementById('profile-login-btn').style.display = 'block';
+      if (document.getElementById('profile-logout-btn')) 
+          document.getElementById('profile-logout-btn').style.display = 'none';
     }
-    }
+  }
+   
          
    
 
