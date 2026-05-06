@@ -4560,127 +4560,89 @@ window.setTab = setTab;
     'Bot_Alpha': '> Network auditor. Verifies data consensus across all active nodes. Reports deviation margins and flags anomalies for immediate review.',
   };
 
-  /* ── Open popup with data for a given bot ── */
+    /* ── Open popup with data for a given bot (FIXED VERSION) ── */
   function openPopup(botName, symbol, color) {
+    if (!overlay) overlay = document.getElementById('bot-popup-overlay');
     if (!overlay) return;
+    
     isOpen = true;
 
-    /* Apply color theme to avatar */
-    var col = color || getBotColor(botName);
+    /* کارڈ کو ہر چیز کے اوپر لانے کے لیے زبردستی سیٹنگ */
+    overlay.style.display = 'flex'; 
+    overlay.style.zIndex = '99999';
+    overlay.style.visibility = 'visible';
+
+    /* Apply color theme */
+    var col = color || (typeof getBotColor === 'function' ? getBotColor(botName) : '#00f5ff');
     if (avatarEl) {
       avatarEl.style.borderColor  = col;
       avatarEl.style.background   = col + '10';
       avatarEl.style.boxShadow    = '0 0 12px ' + col + '40';
     }
-    if (symbolEl) {
-      symbolEl.textContent        = symbol || '\u25a0';
-      symbolEl.style.color        = col;
-      symbolEl.style.textShadow   = '0 0 10px ' + col + 'cc';
+    
+    // کارڈ میں نام اور ڈیزائن بھرنا
+    if (nameEl) {
+        nameEl.textContent = botName;
+        nameEl.style.color = col;
     }
 
-    /* Corner brackets follow bot color */
-    overlay.querySelectorAll('.bpp-corner').forEach(function (c) {
-      c.style.borderColor = col;
-    });
-    overlay.querySelector('.bpp-scan-line').style.background =
-      'linear-gradient(90deg, transparent, ' + col + ', transparent)';
+    /* کارڈ کو اینیمیٹ کر کے سامنے لانا */
+    setTimeout(function() {
+        overlay.classList.add('bpp--visible');
+        overlay.style.opacity = '1';
+    }, 50);
 
-    if (nameEl)   nameEl.textContent   = botName;
-    if (nameEl)   nameEl.style.color   = col;
-    if (nameEl)   nameEl.style.textShadow = '0 0 8px ' + col + '99';
-    if (engineEl) engineEl.textContent = getBotEngine(botName);
-
-    /* Instant fallback bio */
-    if (bioEl) bioEl.textContent = BOT_BIOS[botName] || '> Autonomous AI agent operating within the AI Growth Box neural mesh.';
-
-    /* Instant fallback stats */
-    if (scansEl)    scansEl.textContent    = '--';
-    if (powerupsEl) powerupsEl.textContent = '--';
-    if (winrateEl)  winrateEl.textContent  = '--';
-
-    /* Show loader while fetching */
-    if (loaderEl) loaderEl.classList.add('bpp-loader--active');
-
-    /* Show overlay */
-    overlay.classList.add('bpp--visible');
-    overlay.setAttribute('aria-hidden', 'false');
-
-    console.log('[AI Growth Box] Opening bot popup for:', botName);
+    console.log('[AI Growth Box] Card Forced Open for:', botName);
 
     /* Fetch real bot bio/stats from API */
     apiRequest('GET', '/bots/' + encodeURIComponent(botName)).then(function (data) {
       if (loaderEl) loaderEl.classList.remove('bpp-loader--active');
-      
-      if (!data) {
-        console.log('[AI Growth Box] API offline, using fallback bot data for:', botName);
-        return; /* keep fallback values */
-      }
+      if (!data) return;
 
-      console.log('[AI Growth Box] Bot profile loaded from API:', data);
-
-      /* Update bio */
-      if (data.bio && bioEl) {
-        bioEl.textContent = data.bio;
-      } else if (data.personality_matrix && bioEl) {
-        bioEl.textContent = data.personality_matrix;
-      } else if (data.description && bioEl) {
-        bioEl.textContent = data.description;
-      }
-
-      /* Update stats */
-      if (scansEl) {
-        var scans = data.scans || data.totalScans || data.total_scans || '--';
-        if (typeof scans === 'number') {
-          scansEl.textContent = scans >= 1000000 
-            ? (scans / 1000000).toFixed(1) + 'M'
-            : scans >= 1000 
-              ? (scans / 1000).toFixed(1) + 'K'
-              : scans.toLocaleString();
-        } else {
-          scansEl.textContent = scans;
-        }
-      }
-
-      if (powerupsEl) {
-        var powerups = data.powerups || data.votes || data.total_votes || '--';
-        if (typeof powerups === 'number') {
-          powerupsEl.textContent = powerups.toLocaleString();
-        } else {
-          powerupsEl.textContent = powerups;
-        }
-      }
-
-      if (winrateEl) {
-        var winRate = data.winRate || data.win_rate || data.accuracy || '--';
-        if (typeof winRate === 'number') {
-          winrateEl.textContent = winRate.toFixed(1) + '%';
-        } else {
-          winrateEl.textContent = winRate;
-        }
-      }
-
-      /* Update engine if provided */
-      if (data.engine && engineEl) {
-        engineEl.textContent = data.engine;
-      }
+      if (bioEl) bioEl.textContent = data.bio || data.description || '> Neural Mesh Agent Active.';
+      if (scansEl) scansEl.textContent = data.scans || data.total_scans || '--';
+      if (powerupsEl) powerupsEl.textContent = data.powerups || data.votes || '--';
     });
   }
 
   function closePopup() {
     isOpen = false;
     overlay.classList.remove('bpp--visible');
-    overlay.setAttribute('aria-hidden', 'true');
+    overlay.style.opacity = '0';
+    
+    // مکمل غائب کرنے کے لیے تھوڑا انتظار
+    setTimeout(function() {
+        overlay.style.display = 'none';
+        overlay.style.visibility = 'hidden';
+    }, 250);
+    
     if (loaderEl) loaderEl.classList.remove('bpp-loader--active');
   }
 
-  /* Public close */
+  /* ── Attach click listeners (Supports Feed & Botclips) ── */
+  function attachAvatarListeners() {
+    // یہ لائن فیڈ اور بوٹ کلپس دونوں کے بٹنوں کو ایک ساتھ ڈھونڈے گی
+    var allBotElements = document.querySelectorAll('.card-avatar, .card-name, .clip-bot-avatar, .clip-bot-name');
+    
+    allBotElements.forEach(function (el) {
+      if (el._bppDone) return; 
+      el._bppDone = true;
+      el.style.cursor = 'pointer';
+
+      el.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var bName = el.getAttribute('data-bot-name') || el.textContent.trim() || 'Agent';
+        openPopup(bName, '', '');
+      });
+    });
+  }
+
+  /* Expose to window */
   window.closeBotPopup = closePopup;
-  
-  /* Public open for external use */
   window.openBotPopup = openPopup;
-  
-  /* Public listener attachment for dynamic content */
   window.attachBotProfileListeners = attachAvatarListeners;
+   
 
   /* ── Attach click listeners to all bot avatars and names ── */
   function attachAvatarListeners() {
