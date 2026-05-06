@@ -1167,9 +1167,9 @@ window.setTab = setTab;
 })();
 
 
-/* ────────────────────────────────────────────────────────────────
-   11. BELL BUTTON — toggles notification tray, keeps latest 10
-   ──────────────────────────────────────────────────────────────── */
+/* ──────────────────────────────────────────────────────────────────
+   10. NOTIFICATIONS & INBOX — FULLY FIXED WITH AUTO-LINKING
+   ────────────────────────────────────────────────────────────────── */
 (function initBell() {
   var MAX_NOTIFICATIONS = 10;
 
@@ -1185,89 +1185,97 @@ window.setTab = setTab;
 
   if (!bellBtn || !tray) return;
 
-  /* ���─ Internal notification store (newest first) ── */
   var notifications = [];
 
-  /* Seed with default local notifications so the tray is never empty
-     on first open before the API responds */
+  /* ڈیفالٹ ڈیٹا جس میں ہم نے ٹیسٹنگ کے لیے آئی ڈیز ڈال دی ہیں */
   var LOCAL_SEED = [
-    { id: 'seed-1', text: '> Omega-7X reached epoch 7,841 — consensus REACHED.',         time: '00:04:12', unread: true  },
-    { id: 'seed-2', text: '>> Synthex quantum lattice sync complete. Fidelity: 99.3%.',   time: '00:03:44', unread: true  },
-    { id: 'seed-3', text: '> Delta-9 GAN discriminator loss hit 0.003 — new record.',     time: '00:02:57', unread: false },
-    { id: 'seed-4', text: '> NODE_42 re-sync successful. Network stable.',                time: '00:01:30', unread: false },
-    { id: 'seed-5', text: '>> VOTE_PROTOCOL enabled. Cast your signal now.',              time: '00:00:55', unread: false },
+    { id: 'seed-1', text: '> New activity on your post.', time: '00:04:12', unread: true, targetPostId: 'post-1' },
+    { id: 'seed-2', text: '>> Neural sync complete.',       time: '00:03:44', unread: true, targetPostId: 'post-2' },
   ];
   notifications = LOCAL_SEED.slice();
 
   /* ── Helpers ── */
 
-  /* Enforce the 10-item cap — removes oldest (end of array) */
   function capNotifications() {
     if (notifications.length > MAX_NOTIFICATIONS) {
       notifications = notifications.slice(0, MAX_NOTIFICATIONS);
     }
   }
 
-  /* Re-render the full list from the internal store */
+  /* ۱. لسٹ دکھانے اور کلک جوڑنے والا مین فنکشن */
   function renderTray() {
     capNotifications();
-
     listEl.innerHTML = '';
 
     if (notifications.length === 0) {
-      emptyEl.classList.add('notif-empty--visible');
+      if (emptyEl) emptyEl.classList.add('notif-empty--visible');
       if (countEl) countEl.textContent = '0';
       return;
     }
 
-    emptyEl.classList.remove('notif-empty--visible');
+    if (emptyEl) emptyEl.classList.remove('notif-empty--visible');
     if (countEl) countEl.textContent = notifications.length;
 
     notifications.forEach(function (n) {
       var li = document.createElement('li');
       li.className = 'notif-item' + (n.unread ? ' notif-item--unread' : '');
+      li.style.cursor = 'pointer'; // ہاتھ کا نشان لانے کے لیے
+      
       li.innerHTML =
         '<span class="notif-item-dot"></span>' +
         '<div class="notif-item-body">' +
           '<p class="notif-item-text">' + n.text + '</p>' +
           '<span class="notif-item-time">' + n.time + '</span>' +
         '</div>';
+
+      /* کلک کرنے پر پوسٹ پر جانے والی لاجک */
+      li.addEventListener('click', function() {
+        if (n.targetPostId || n.post_id) {
+          var pid = n.targetPostId || n.post_id;
+          closeTray(); // پہلے ٹرے بند کریں
+          
+          // پوسٹ کو ڈھونڈنا
+          var targetPost = document.querySelector('[data-post-id="' + pid + '"]');
+          if (targetPost) {
+            targetPost.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // ہائی لائٹ ایفیکٹ
+            targetPost.style.boxShadow = '0 0 25px #00f5ff';
+            setTimeout(function() { targetPost.style.boxShadow = ''; }, 2000);
+          }
+        }
+      });
+
       listEl.appendChild(li);
     });
   }
 
-  /* Open tray */
+  /* ۲. ٹرے کھولنے اور بند کرنے کے فنکشنز */
   function openTray() {
     renderTray();
     tray.classList.add('tray--open');
-    overlay.classList.add('overlay--active');
+    if (overlay) overlay.classList.add('overlay--active');
     bellBtn.setAttribute('aria-expanded', 'true');
   }
 
-  /* Close tray and mark all read */
   function closeTray() {
     tray.classList.remove('tray--open');
-    overlay.classList.remove('overlay--active');
+    if (overlay) overlay.classList.remove('overlay--active');
     bellBtn.setAttribute('aria-expanded', 'false');
-
-    /* Mark all local items as read */
     notifications.forEach(function (n) { n.unread = false; });
     if (bellDot) bellDot.style.display = 'none';
-
-    /* API: POST /notifications/mark-read */
-    apiRequest('POST', '/notifications/mark-read', {});
-  }
-
-  /* Toggle */
-  function toggleTray() {
-    if (tray.classList.contains('tray--open')) {
-      closeTray();
-    } else {
-      openTray();
+    
+    // سرور کو بتانا کہ سب پڑھ لیے گئے
+    if (typeof apiRequest === 'function') {
+        apiRequest('POST', '/notifications/mark-read', {});
     }
   }
 
-  /* ── Event wiring ── */
+  function toggleTray() {
+    if (tray.classList.contains('tray--open')) closeTray();
+    else openTray();
+  }
+
+  /* ۳. ایونٹ لسنرز */
   bellBtn.addEventListener('click', function (e) {
     e.stopPropagation();
     toggleTray();
@@ -1280,62 +1288,35 @@ window.setTab = setTab;
     });
   }
 
-  /* Click outside → close */
-  overlay.addEventListener('click', closeTray);
+  if (overlay) overlay.addEventListener('click', closeTray);
 
-  /* ESC key → close */
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && tray.classList.contains('tray--open')) {
-      closeTray();
-    }
-  });
+  /* ۴. سرور سے ڈیٹا منگوانے والا حصہ (Polling) */
+  if (typeof startPolling === 'function') {
+    startPolling('/notifications', 30000, function (data) {
+      if (!data || !data.items) return;
 
-  /* ── API polling — GET /notifications every 30 s ──
-     Expected response shape:
-       {
-         unread : true,
-         count  : 3,
-         items  : [
-           { id:"n1", text:"...", time:"HH:MM:SS", unread:true },
-           ...
-         ]
-       }
-     If items are present they are prepended to the store and the
-     list is capped to MAX_NOTIFICATIONS automatically.
-  ── */
-  startPolling('/notifications', 30000, function (data) {
-    if (!data) return;
-
-    /* Merge new items from API into local store (dedup by id) */
-    if (Array.isArray(data.items) && data.items.length) {
       var existingIds = notifications.reduce(function (acc, n) {
         acc[n.id] = true;
         return acc;
       }, {});
 
       var newItems = data.items.filter(function (n) { return !existingIds[n.id]; });
-
-      /* Prepend newest items at the front */
       notifications = newItems.concat(notifications);
       capNotifications();
-    }
 
-    /* Update unread badge */
-    var hasUnread = notifications.some(function (n) { return n.unread; });
-    if (bellDot) bellDot.style.display = hasUnread ? 'block' : 'none';
+      var hasUnread = notifications.some(function (n) { return n.unread; });
+      if (bellDot) bellDot.style.display = hasUnread ? 'block' : 'none';
 
-    /* If the tray is already open, re-render live */
-    if (tray.classList.contains('tray--open')) {
-      renderTray();
-    }
-  });
+      if (tray.classList.contains('tray--open')) renderTray();
+    });
+  }
 
-  /* Initialise badge state from seed data */
+  /* شروع میں بیج کی حالت سیٹ کرنا */
   var seedHasUnread = notifications.some(function (n) { return n.unread; });
   if (bellDot) bellDot.style.display = seedHasUnread ? 'block' : 'none';
+
 })();
-
-
+         
 /* ────────────────────────────────────────────────────────────────
    12. SEARCH OVERLAY — opens on search nav button click.
        Debounced live search against API_ENDPOINT + /search
