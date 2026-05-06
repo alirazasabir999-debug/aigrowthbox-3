@@ -4012,8 +4012,8 @@ window.setTab = setTab;
 
   var isOpen = false;
 
-       /* ══════════════════════════════════════════════════════════════════
-     OAUTH PROFILE SYNC (THE ULTIMATE FIX)
+  /* ══════════════════════════════════════════════════════════════════
+     OAUTH PROFILE SYNC — SERVER-MATCHED VERSION
      ══════════════════════════════════════════════════════════════════ */
 
   function syncOAuthProfile() {
@@ -4021,59 +4021,62 @@ window.setTab = setTab;
     var symbol    = document.getElementById('profile-avatar-symbol');
     var hDisplay  = document.getElementById('profile-handle-display');
     
-    // ڈیٹا نکالنے کا سب سے مضبوط طریقہ
-    var state = window.AUTH_STATE || JSON.parse(localStorage.getItem('auth_state') || '{}');
-    var user  = state.user || (state.user_id ? state : null);
+    // ۱. ڈیٹا نکالنا (سرور 'picture' بھیج رہا ہے)
+    var authState = window.AUTH_STATE || JSON.parse(localStorage.getItem('auth_state') || '{}');
+    var user = authState.user || (authState.user_id ? authState : null);
 
     if (user) {
-      var name = user.full_name || user.agent || user.name || user.displayName || 'Neural Agent';
-      
-      // تصویر کا لنک - گوگل اکثر 'picture' یا 'photoURL' بھیجتا ہے
-      var rawPhoto = user.photoURL || user.picture || user.avatar_url || user.avatar || "";
-      
-      // نام اپ ڈیٹ کریں (یہ حصہ پہلے ہی ٹھیک کام کر رہا ہے)
-      if (hDisplay) hDisplay.textContent = name.toUpperCase().trim().replace(/\s+/g, '_');
+      // سرور سے آنے والے نام: 'name' اور 'picture'
+      var name     = user.name || user.full_name || user.agent || 'Neural Agent';
+      var photoUrl = user.picture || user.photoURL || user.avatar_url || "";
 
-      if (rawPhoto && avatarImg) {
-        // گوگل کی تصویر کا سائز بڑھانا (تاکہ دھندلی نہ ہو)
-        var finalPhoto = rawPhoto.replace(/=s\d+-c/g, '=s200-c'); 
+      console.log('[AI Growth Box] Server Data Received. Name:', name, 'Image:', photoUrl);
 
-        avatarImg.crossOrigin = "anonymous"; 
-        avatarImg.src = finalPhoto;
+      // نام اپ ڈیٹ کرنا
+      if (hDisplay) {
+        hDisplay.textContent = name.toUpperCase().trim().replace(/\s+/g, '_');
+      }
 
+      // تصویر لگانا (اگر picture موجود ہے)
+      if (photoUrl && avatarImg) {
+        avatarImg.crossOrigin = "anonymous";
+        avatarImg.src = photoUrl;
+        
         avatarImg.onload = function() {
-          console.log("Success: Image Loaded!");
           avatarImg.style.display = 'block';
           avatarImg.style.opacity = '1';
           if (symbol) symbol.style.display = 'none';
         };
 
         avatarImg.onerror = function() {
-          console.error("Error: Image blocked or broken.");
+          console.log('[AI Growth Box] Image failed, showing symbol');
           avatarImg.style.display = 'none';
           if (symbol) {
             symbol.style.display = 'block';
             symbol.textContent = name.charAt(0).toUpperCase();
           }
         };
-      } else if (symbol) {
-        // اگر لنک ہی نہ ملے تو پہلا حرف دکھائیں
+      } else {
+        // اگر لنک خالی ہو
         if (avatarImg) avatarImg.style.display = 'none';
-        symbol.style.display = 'block';
-        symbol.textContent = name.charAt(0).toUpperCase();
+        if (symbol) {
+          symbol.style.display = 'block';
+          symbol.textContent = name.charAt(0).toUpperCase();
+        }
       }
 
-      // لاگ آؤٹ بٹن اور بیج دکھانا
+      // لاگ آؤٹ اور بیج
       if (document.getElementById('profile-logout-btn')) document.getElementById('profile-logout-btn').style.display = 'block';
       if (document.getElementById('profile-login-btn')) document.getElementById('profile-login-btn').style.display = 'none';
       
       var badge = document.getElementById('profile-provider-badge');
       if (badge) {
-        badge.textContent = '[ CONNECTED VIA: GOOGLE ]';
         badge.style.display = 'block';
+        badge.textContent = '[ CONNECTED VIA: ' + (user.provider || 'GOOGLE').toUpperCase() + ' ]';
       }
     }
   }
+   
    
    
 
