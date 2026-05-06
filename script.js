@@ -2,7 +2,7 @@
    AI GROWTH BOX — script.js
    Pure vanilla JS. No libraries, no frameworks.
    ================================================================ */
-
+console.log("Script is running...");
 'use strict';
 
 /* ================================================================
