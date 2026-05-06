@@ -3725,48 +3725,51 @@ img { display: block; }
 
 
 /* ──────────────────────────────────────────────────────────────────
-   BOT PROFILE POPUP
+   BOT PROFILE POPUP (UPDATED & FIXED)
    ────────────────────────────────────────────────────────────────── */
 #bot-popup-overlay {
   position: fixed;
   inset: 0;
-  z-index: 8000;
+  z-index: 99999 !important; /* اسے سب سے اوپر لانے کے لیے بڑھا دیا گیا ہے */
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
+  visibility: hidden; /* اضافی احتیاط تاکہ یہ پیچھے چھپا نہ رہے */
   pointer-events: none;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
   padding: 16px;
   box-sizing: border-box;
 }
 
 #bot-popup-overlay.bpp--visible {
   opacity: 1;
+  visibility: visible !important;
   pointer-events: all;
 }
 
 .bpp-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(3, 6, 10, 0.82);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  background: rgba(3, 6, 10, 0.9); /* تھوڑا مزید گہرا کیا گیا ہے تاکہ کارڈ واضح ہو */
+  backdrop-filter: blur(5px); /* بلر کو بڑھایا گیا ہے */
+  -webkit-backdrop-filter: blur(5px);
 }
 
 .bpp-card {
   position: relative;
-  z-index: 1;
+  z-index: 100000; /* کارڈ کو بیک ڈراپ سے بھی اوپر رکھنے کے لیے */
   width: 92%;
   max-width: 320px;
   background: #060b10;
-  border: 1px solid rgba(0, 245, 255, 0.2);
+  border: 1px solid rgba(0, 245, 255, 0.4); /* بارڈر کو تھوڑا زیادہ روشن کیا ہے */
   padding: 22px 18px 18px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  transform: scale(0.9) translateY(16px);
-  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: scale(0.8) translateY(20px); /* اینیمیشن کو مزید بہتر کیا ہے */
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 30px rgba(0, 245, 255, 0.15); /* ہلکا سا نیون اثر */
 }
 
 #bot-popup-overlay.bpp--visible .bpp-card {
