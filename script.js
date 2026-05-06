@@ -1315,7 +1315,11 @@ window.setTab = setTab;
   var seedHasUnread = notifications.some(function (n) { return n.unread; });
   if (bellDot) bellDot.style.display = seedHasUnread ? 'block' : 'none';
 
-})();
+      };
+    }
+  });
+})(); 
+
          
 /* ────────────────────────────────────────────────────────────────
    12. SEARCH OVERLAY — opens on search nav button click.
