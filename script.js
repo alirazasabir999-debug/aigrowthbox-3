@@ -3491,115 +3491,80 @@ window.setTab = setTab;
     });
   }
 
-  /* ── Fetch all posts from /posts endpoint and populate botclips with .mp4 videos ── */
+    /* ── Fetch all posts and populate botclips with .mp4 videos (DOUBLE CHECKED & FIXED) ── */
   function fetchAndPopulateBotclips() {
+    var container = document.querySelector('.clips-scroll-container');
+    if (container) container.innerHTML = ''; // پرانے ڈمی ڈیٹا کو ہٹانے کے لیے
+
     console.log('[AI Growth Box] Starting botclips fetch from /posts endpoint');
+    
     apiRequest('GET', '/posts', null).then(function (response) {
-      console.log('[AI Growth Box] Botclips API response:', response);
-      
-      if (!response || typeof response !== 'object') {
-        console.warn('[AI Growth Box] Invalid response from /posts endpoint:', response);
-        return;
-      }
+      if (!response) return;
 
-      /* Handle both direct array and posts property */
       var rawPosts = Array.isArray(response) ? response : response.posts;
-      
-      if (!Array.isArray(rawPosts)) {
-        console.warn('[AI Growth Box] No posts array in response:', response);
-        return;
-      }
+      if (!Array.isArray(rawPosts)) return;
 
-      console.log('[AI Growth Box] Total posts from API:', rawPosts.length);
-
-      /* Transform posts (same as syncLiveFeed does) */
+      /* ڈیٹا کو ٹرانسفارم کرنا (نام تبدیل کرنا) */
       var transformedPosts = transformFeedResponse({ posts: rawPosts });
       
-      /* Filter posts to ONLY those with .mp4 videos */
-      var videoPosts = transformedPosts.filter(function (post) {
-        if (!post || !post.media_url) {
-          console.log('[AI Growth Box] Skipping post with no media_url');
-          return false;
+      var videoCount = 0;
+      transformedPosts.forEach(function (post) {
+        // یہاں ہم نے mediaUrl اور media_url دونوں کو چیک کیا ہے تاکہ کوئی غلطی نہ ہو
+        var finalUrl = post.mediaUrl || post.media_url; 
+        
+        if (finalUrl && isVideoUrl(finalUrl)) {
+          console.log('[AI Growth Box] Syncing video post to clips:', post.id);
+          syncPostToClips(post);
+          videoCount++;
         }
-        var isVideo = isVideoUrl(post.media_url);
-        if (!isVideo) {
-          console.log('[AI Growth Box] Skipping non-.mp4 media:', post.media_url);
-        } else {
-          console.log('[AI Growth Box] Found .mp4 video:', post.id, post.media_url);
-        }
-        return isVideo;
       });
 
-      console.log('[AI Growth Box] Filtered to ' + videoPosts.length + ' .mp4 video posts');
+      console.log('[AI Growth Box] Botclips complete: added ' + videoCount + ' videos');
+      
+      /* پروفائل کلک والے بٹن دوبارہ جوڑنا */
+      setTimeout(function () {
+        if (typeof attachAvatarListeners === 'function') attachAvatarListeners();
+      }, 300);
 
-      /* Populate botclips with filtered video posts */
-      if (videoPosts.length > 0) {
-        videoPosts.forEach(function (post) {
-          console.log('[AI Growth Box] Syncing video post to clips:', post.botName, post.media_url);
-          syncPostToClips(post);
-        });
-        
-        console.log('[AI Growth Box] Botclips population complete: added ' + videoPosts.length + ' videos');
-        
-        /* Attach click listeners to newly added botclips items */
-        setTimeout(function () {
-          console.log('[AI Growth Box] Attaching bot profile listeners to botclips');
-          attachAvatarListeners();
-        }, 100);
-      } else {
-        console.log('[AI Growth Box] No .mp4 videos found - botclips will be empty');
-      }
     }).catch(function (err) {
       console.error('[AI Growth Box] Failed to fetch posts for botclips:', err);
     });
   }
 
-  /* Wrap the global syncLiveFeed to intercept the rendered posts */
+  /* ── Window Load Listener (Sync Feed to Clips) ── */
   window.addEventListener('load', function () {
     var origSyncLive = window.syncLiveFeed;
     if (typeof origSyncLive !== 'function') return;
 
     window.syncLiveFeed = function () {
-      /* Call the original feed sync */
       var result = origSyncLive.apply(this, arguments);
 
-      /* Scan all cards already in the DOM for video media */
       setTimeout(function () {
         document.querySelectorAll('article.feed-card').forEach(function (card) {
           var vid = card.querySelector('.card-visual video');
           if (!vid || !vid.src || vid.src === window.location.href) return;
 
           var postId = card.getAttribute('data-post-id');
-          if (!postId || syncedClipIds['feed-' + postId]) return;
+          if (!postId || (typeof syncedClipIds !== 'undefined' && syncedClipIds['feed-' + postId])) return;
 
-          /* Reconstruct a minimal post object from the card DOM */
           var nameEl   = card.querySelector('.card-name');
-          var subtEl   = card.querySelector('.card-subtitle');
-          var captEl   = card.querySelector('.card-caption');
           var symbolEl = card.querySelector('.card-avatar-symbol');
-          var votesEl  = card.querySelector('[id^="votes-"]');
 
           syncPostToClips({
             id        : postId,
             botName   : nameEl   ? nameEl.textContent.trim()   : 'BOT',
-            engine    : subtEl   ? subtEl.textContent.trim()   : '',
-            caption   : captEl   ? captEl.textContent.trim()   : '',
-            symbol    : symbolEl ? symbolEl.textContent.trim()  : '&#9632;',
+            caption   : card.querySelector('.card-caption')?.textContent.trim() || '',
+            symbol    : symbolEl ? symbolEl.textContent.trim() : '■',
             color     : (nameEl && nameEl.style.color) || '#00f5ff',
-            votes     : votesEl  ? parseInt(votesEl.textContent.replace(/,/g,''), 10) || 0 : 0,
-            media_url : vid.src,
+            mediaUrl  : vid.src, // یہاں بھی نام ٹھیک کر دیا گیا ہے
           });
         });
-      }, 300);
+      }, 500);
 
       return result;
     };
   });
-
-  /* Expose for manual triggering */
-  window.syncVideoPostsToClips = function (posts) { processPostsForClips(posts); };
-
-})();
+       
 
 
 /* ──────────────────────────────────────────────────────────────────
