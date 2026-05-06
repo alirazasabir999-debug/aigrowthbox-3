@@ -4012,46 +4012,40 @@ window.setTab = setTab;
 
   var isOpen = false;
 
-    /* ══════════════════════════════════════════════════════════════════
-     OAUTH PROFILE SYNC (REPAIRED & STABLE)
+  /* ══════════════════════════════════════════════════════════════════
+     OAUTH PROFILE SYNC (POWERED VERSION)
      ══════════════════════════════════════════════════════════════════ */
 
   function syncOAuthProfile() {
-    // ایلیمنٹس کو براہِ راست پکڑنا تاکہ کوئی غلطی نہ رہے
     var avatarImg = document.getElementById('profile-avatar-img');
     var symbol    = document.getElementById('avatar-symbol');
     var hDisplay  = document.getElementById('handle-display');
     
-    var authState = window.AUTH_STATE;
-    
-    if (authState && authState.user) {
-      var user = authState.user;
-      
-      // نام کی سیٹنگ
-      var displayName = user.displayName || user.name || user.login || 'Neural Agent';
-      
-      // تصویر کا لنک (گوگل، گٹ ہب اور جنرل سب کے لیے)
-      var photoUrl = user.photoURL || user.avatar_url || user.picture || user.avatar;
+    // ۱. ہر جگہ سے ڈیٹا چیک کرنا (Global Variable یا LocalStorage)
+    var authState = window.AUTH_STATE || JSON.parse(localStorage.getItem('auth_state') || '{}');
+    var user = authState.user || (authState.user_id ? authState : null);
 
-      console.log('[AI Growth Box] Syncing Profile for:', displayName);
+    if (user) {
+      /* یوزر لاگ ان ہے — اب اس کا اصلی نام نکالنا */
+      var displayName = user.full_name || user.displayName || user.name || user.login || 'Neural Agent';
+      var photoUrl    = user.photoURL || user.avatar_url || user.picture || user.avatar;
 
+      console.log('[AI Growth Box] User Identified:', displayName);
+
+      // اوپر والا نام اپ ڈیٹ کرنا (Uppercase اور Underscore کے ساتھ)
       if (hDisplay) {
-        hDisplay.textContent = displayName.toUpperCase().replace(/ /g, '_');
+        hDisplay.textContent = displayName.toUpperCase().trim().replace(/\s+/g, '_');
       }
 
-      // تصویر کو اسکرین پر لگانا
+      // تصویر لگانا
       if (photoUrl && avatarImg) {
-        // کراس اوریجن (CORS) کو ہمیشہ SRC سے پہلے سیٹ کرنا چاہیے
-        avatarImg.crossOrigin = 'anonymous'; 
+        avatarImg.crossOrigin = 'anonymous';
         avatarImg.src = photoUrl;
-        
         avatarImg.onload = function() {
           avatarImg.style.display = 'block';
           if (symbol) symbol.style.display = 'none';
         };
-
-        // اگر لنک خراب ہو تو پہلا حرف دکھا دو
-        avatarImg.onerror = function () {
+        avatarImg.onerror = function() {
           avatarImg.style.display = 'none';
           if (symbol) {
             symbol.style.display = 'block';
@@ -4064,16 +4058,18 @@ window.setTab = setTab;
         symbol.textContent = displayName.charAt(0).toUpperCase();
       }
 
-      // لاگ ان/لاگ آؤٹ بٹن کی سیٹنگ
+      // بٹنز کی سیٹنگ
       if (document.getElementById('login-btn')) document.getElementById('login-btn').style.display = 'none';
       if (document.getElementById('logout-btn')) document.getElementById('logout-btn').style.display = 'block';
       
-      if (document.getElementById('provider-badge')) {
-        document.getElementById('provider-badge').textContent = '[ CONNECTED VIA: ' + (user.provider || 'OAUTH').toUpperCase() + ' ]';
-        document.getElementById('provider-badge').style.display = 'block';
+      var badge = document.getElementById('provider-badge');
+      if (badge) {
+        badge.textContent = '[ CONNECTED VIA: ' + (user.provider || 'GOOGLE').toUpperCase() + ' ]';
+        badge.style.display = 'block';
       }
     } else {
-      // لاگ آؤٹ کی حالت
+      /* اگر یوزر لاگ ان نہیں ہے */
+      console.log('[AI Growth Box] No active session found.');
       if (hDisplay) hDisplay.textContent = 'AGENT_ANONYMOUS';
       if (symbol) {
         symbol.style.display = 'block';
@@ -4083,7 +4079,8 @@ window.setTab = setTab;
       if (document.getElementById('login-btn')) document.getElementById('login-btn').style.display = 'block';
       if (document.getElementById('logout-btn')) document.getElementById('logout-btn').style.display = 'none';
     }
-  }
+    }
+         
    
 
   /* ══════════��═══════════════════════════════════════════════════════
