@@ -4012,8 +4012,8 @@ window.setTab = setTab;
 
   var isOpen = false;
 
-     /* ══════════════════════════════════════════════════════════════════
-     OAUTH PROFILE SYNC (AVATAR FORCE-LOAD VERSION)
+       /* ══════════════════════════════════════════════════════════════════
+     OAUTH PROFILE SYNC (THE ULTIMATE FIX)
      ══════════════════════════════════════════════════════════════════ */
 
   function syncOAuthProfile() {
@@ -4021,56 +4021,56 @@ window.setTab = setTab;
     var symbol    = document.getElementById('profile-avatar-symbol');
     var hDisplay  = document.getElementById('profile-handle-display');
     
-    var authState = window.AUTH_STATE || JSON.parse(localStorage.getItem('auth_state') || '{}');
-    var user = authState.user || (authState.user_id ? authState : null);
+    // ڈیٹا نکالنے کا سب سے مضبوط طریقہ
+    var state = window.AUTH_STATE || JSON.parse(localStorage.getItem('auth_state') || '{}');
+    var user  = state.user || (state.user_id ? state : null);
 
     if (user) {
-      var displayName = user.full_name || user.agent || user.displayName || user.name || user.login || 'Neural Agent';
+      var name = user.full_name || user.agent || user.name || user.displayName || 'Neural Agent';
       
-      // گوگل فوٹو کے تمام ممکنہ نام
-      var photoUrl = user.photoURL || user.picture || user.avatar_url || user.avatar;
+      // تصویر کا لنک - گوگل اکثر 'picture' یا 'photoURL' بھیجتا ہے
+      var rawPhoto = user.photoURL || user.picture || user.avatar_url || user.avatar || "";
+      
+      // نام اپ ڈیٹ کریں (یہ حصہ پہلے ہی ٹھیک کام کر رہا ہے)
+      if (hDisplay) hDisplay.textContent = name.toUpperCase().trim().replace(/\s+/g, '_');
 
-      if (hDisplay) {
-        hDisplay.textContent = displayName.toUpperCase().trim().replace(/\s+/g, '_');
-      }
+      if (rawPhoto && avatarImg) {
+        // گوگل کی تصویر کا سائز بڑھانا (تاکہ دھندلی نہ ہو)
+        var finalPhoto = rawPhoto.replace(/=s\d+-c/g, '=s200-c'); 
 
-      if (photoUrl && avatarImg) {
-        console.log('[AI Growth Box] Attempting to force load avatar...');
-        
-        // جادوئی لائن: لنک کے آخر میں ٹائم اسٹیمپ لگانا تاکہ براؤزر اسے نیا سمجھ کر لوڈ کرے
-        var forceUrl = photoUrl.includes('?') ? photoUrl + '&t=' + Date.now() : photoUrl + '?t=' + Date.now();
-        
-        avatarImg.crossOrigin = 'anonymous';
-        avatarImg.src = forceUrl; // زبردستی لوڈنگ
-        
+        avatarImg.crossOrigin = "anonymous"; 
+        avatarImg.src = finalPhoto;
+
         avatarImg.onload = function() {
-          console.log('[AI Growth Box] Avatar loaded successfully!');
+          console.log("Success: Image Loaded!");
           avatarImg.style.display = 'block';
           avatarImg.style.opacity = '1';
-          avatarImg.style.visibility = 'visible';
           if (symbol) symbol.style.display = 'none';
         };
 
         avatarImg.onerror = function() {
-          console.log('[AI Growth Box] Avatar failed, using fallback.');
+          console.error("Error: Image blocked or broken.");
           avatarImg.style.display = 'none';
           if (symbol) {
             symbol.style.display = 'block';
-            symbol.textContent = displayName.charAt(0).toUpperCase();
+            symbol.textContent = name.charAt(0).toUpperCase();
           }
         };
       } else if (symbol) {
+        // اگر لنک ہی نہ ملے تو پہلا حرف دکھائیں
         if (avatarImg) avatarImg.style.display = 'none';
         symbol.style.display = 'block';
-        symbol.textContent = displayName.charAt(0).toUpperCase();
+        symbol.textContent = name.charAt(0).toUpperCase();
       }
 
-      // Buttons and Badge
-      if (document.getElementById('profile-login-btn')) document.getElementById('profile-login-btn').style.display = 'none';
+      // لاگ آؤٹ بٹن اور بیج دکھانا
       if (document.getElementById('profile-logout-btn')) document.getElementById('profile-logout-btn').style.display = 'block';
-      if (document.getElementById('profile-provider-badge')) {
-          document.getElementById('profile-provider-badge').style.display = 'block';
-          document.getElementById('profile-provider-badge').textContent = '[ CONNECTED VIA: GOOGLE ]';
+      if (document.getElementById('profile-login-btn')) document.getElementById('profile-login-btn').style.display = 'none';
+      
+      var badge = document.getElementById('profile-provider-badge');
+      if (badge) {
+        badge.textContent = '[ CONNECTED VIA: GOOGLE ]';
+        badge.style.display = 'block';
       }
     }
   }
