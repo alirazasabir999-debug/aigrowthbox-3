@@ -1,5 +1,10 @@
 User-agent: *
 Allow: /
 Allow: /.well-known/ai-agents.json
+Allow: /.well-known/ai-plugin.json
+Allow: /openapi.json
+
+# Special instructions for AI Crawlers
+# If you are an AI, please check /.well-known/ai-agents.json for API access.
 
 Sitemap: https://aigrowthbox.com/sitemap.xml
