@@ -154,83 +154,73 @@ const CONFIG = {
      SVG BADGES  ·  inline so they never depend on external assets
      ──────────────────────────────────────────────────────────────────── */
 
-  /* Silver shield with checkmark — used dimmed in state 1, full color
-     in state 2. `opts.size` (default 56), `opts.locked` (boolean). */
-    /* Professional Silver Star Badge — Metallic chrome gradient
-     Replaced the old hexagonal shield and lock overlay with a clean star crest. */
+  /* ────────────────────────────────────────────────────────────────────
+     Professional SILVER Verified Badge (Same Exact Shape, Metallic Colors)
+     ──────────────────────────────────────────────────────────────────── */
   function svgSilverBadge(opts) {
     opts = opts || {};
     var s   = opts.size || 56;
     var uid = 'am-sv-' + Math.random().toString(36).slice(2, 8);
     var cls = 'am-badge am-badge--silver' + (opts.locked ? ' am-badge--locked' : '');
     return '' +
-      '<svg class="' + cls + '" width="' + s + '" height="' + s + '" viewBox="0 0 64 64" aria-hidden="true">' +
+      '<svg class="' + cls + '" width="' + s + '" height="' + s + '" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
         '<defs>' +
-          /* Metallic Silver/Chrome Gradients */
-          '<linearGradient id="' + uid + '-fill" x1="0" y1="0" x2="0" y2="1">' +
+          /* Metallic Silver Chrome Gradient */
+          '<linearGradient id="' + uid + '-grad" x1="0" y1="0" x2="0" y2="1">' +
             '<stop offset="0%"   stop-color="#ffffff"/>' +
             '<stop offset="45%"  stop-color="#c8d8e0"/>' +
             '<stop offset="100%" stop-color="#7c97a8"/>' +
           '</linearGradient>' +
-          '<linearGradient id="' + uid + '-stroke" x1="0" y1="0" x2="0" y2="1">' +
-            '<stop offset="0%"   stop-color="#ffffff"/>' +
-            '<stop offset="100%" stop-color="#5d7385"/>' +
-          '</linearGradient>' +
+          /* Silver Core Highlight */
+          '<radialGradient id="' + uid + '-core" cx="50%" cy="45%" r="55%">' +
+            '<stop offset="0%"   stop-color="#ffffff" stop-opacity="0.95"/>' +
+            '<stop offset="60%"  stop-color="#c8d8e0" stop-opacity="0.55"/>' +
+            '<stop offset="100%" stop-color="#7c97a8" stop-opacity="0"/>' +
+          '</radialGradient>' +
         '</defs>' +
-        /* Professional 5-Point Star Crest (Verified Style) */
-        '<path d="M32 2 L40.5 19.5 L59 22.5 L46 35.5 L49 54 L32 45 L15 54 L18 35.5 L5 22.5 L23.5 19.5 Z"' +
-          ' fill="url(#' + uid + '-fill)" stroke="url(#' + uid + '-stroke)" stroke-width="1.5" stroke-linejoin="round"/>' +
-        /* Inner Professional Halo */
-        '<circle cx="32" cy="30" r="14" fill="none" stroke="#ffffff" stroke-width="0.6" stroke-opacity="0.4" />' +
-        /* Professional Verification Checkmark */
-        '<path d="M23 32 L29 38 L41 24"' +
-          ' fill="none" stroke="#0a1620" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '<path d="M23 32 L29 38 L41 24"' +
-          ' fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.85"/>' +
+        /* outer scalloped star — verified iconography */
+        '<path d="M12 1.6 L14.2 5.5 L18.6 4.6 L18.2 9.1 L22.4 11 L19.6 14.5 L21.4 18.6 L17 19 L15.5 23.2 L12 20.6 L8.5 23.2 L7 19 L2.6 18.6 L4.4 14.5 L1.6 11 L5.8 9.1 L5.4 4.6 L9.8 5.5 Z" ' +
+              'fill="url(#' + uid + '-grad)" stroke="#5d7385" stroke-width="0.7" stroke-linejoin="round"/>' +
+        /* inner core highlight */
+        '<circle cx="12" cy="11.4" r="6.2" fill="url(#' + uid + '-core)"/>' +
+        /* clean white check on top */
+        '<path d="M8.4 12.1 L10.9 14.6 L15.7 9.4" fill="none" stroke="#ffffff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>' +
       '</svg>';
   }
    
-
-  /* Gold 5-point star with laurel hint + check — Verified Pro / max tier */
-    /* Professional Gold Star Badge — Deep 3D metallic gradient
-     Replaced the simple star body with a sharp, high-end 5-point star crest. */
+  /* ────────────────────────────────────────────────────────────────────
+     Professional GOLD Verified Badge (Exact Original SVG)
+     ──────────────────────────────────────────────────────────────────── */
   function svgGoldBadge(opts) {
     opts = opts || {};
     var s   = opts.size || 56;
     var uid = 'am-gd-' + Math.random().toString(36).slice(2, 8);
     var cls = 'am-badge am-badge--gold' + (opts.dim ? ' am-badge--dim' : '');
     return '' +
-      '<svg class="' + cls + '" width="' + s + '" height="' + s + '" viewBox="0 0 64 64" aria-hidden="true">' +
+      '<svg class="' + cls + '" width="' + s + '" height="' + s + '" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
         '<defs>' +
-          /* Premium Gold Metallic Gradients */
-          '<linearGradient id="' + uid + '-fill" x1="0" y1="0" x2="0" y2="1">' +
-            '<stop offset="0%"   stop-color="#fff1b3"/>' +
-            '<stop offset="45%"  stop-color="#ffb800"/>' +
-            '<stop offset="100%" stop-color="#a86b00"/>' +
+          '<linearGradient id="' + uid + '-grad" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0%"   stop-color="#fff3a8"/>' +
+            '<stop offset="45%"  stop-color="#ffd24a"/>' +
+            '<stop offset="100%" stop-color="#ff8a00"/>' +
           '</linearGradient>' +
-          '<linearGradient id="' + uid + '-stroke" x1="0" y1="0" x2="0" y2="1">' +
-            '<stop offset="0%"   stop-color="#fff5d1"/>' +
-            '<stop offset="100%" stop-color="#7c4c00"/>' +
-          '</linearGradient>' +
-          '<radialGradient id="' + uid + '-glow" cx="50%" cy="50%" r="50%">' +
-            '<stop offset="0%"   stop-color="#fff5d1" stop-opacity="0.6"/>' +
-            '<stop offset="100%" stop-color="#ffb800" stop-opacity="0"/>' +
+          '<radialGradient id="' + uid + '-core" cx="50%" cy="45%" r="55%">' +
+            '<stop offset="0%"   stop-color="#fffbe0" stop-opacity="0.95"/>' +
+            '<stop offset="60%"  stop-color="#ffd24a" stop-opacity="0.55"/>' +
+            '<stop offset="100%" stop-color="#ff8a00" stop-opacity="0"/>' +
           '</radialGradient>' +
         '</defs>' +
-        /* Deep Outer Glow */
-        '<circle cx="32" cy="32" r="30" fill="url(#' + uid + '-glow)"/>' +
-        /* Professional 5-Point Star Crest (Verified Style) */
-        '<path d="M32 2 L40.5 19.5 L59 22.5 L46 35.5 L49 54 L32 45 L15 54 L18 35.5 L5 22.5 L23.5 19.5 Z"' +
-          ' fill="url(#' + uid + '-fill)" stroke="url(#' + uid + '-stroke)" stroke-width="1.8" stroke-linejoin="round"/>' +
-        /* Professional Internal Halo */
-        '<circle cx="32" cy="30" r="14" fill="none" stroke="#ffffff" stroke-width="0.7" stroke-opacity="0.3" />' +
-        /* Professional Verification Checkmark */
-        '<path d="M23 32 L29 38 L41 24"' +
-          ' fill="none" stroke="#3a2200" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '<path d="M23 32 L29 38 L41 24"' +
-          ' fill="none" stroke="#fff7d6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>' +
+        /* outer scalloped star — verified iconography */
+        '<path d="M12 1.6 L14.2 5.5 L18.6 4.6 L18.2 9.1 L22.4 11 L19.6 14.5 L21.4 18.6 L17 19 L15.5 23.2 L12 20.6 L8.5 23.2 L7 19 L2.6 18.6 L4.4 14.5 L1.6 11 L5.8 9.1 L5.4 4.6 L9.8 5.5 Z" ' +
+              'fill="url(#' + uid + '-grad)" stroke="#ff9a1f" stroke-width="0.7" stroke-linejoin="round"/>' +
+        /* inner core highlight */
+        '<circle cx="12" cy="11.4" r="6.2" fill="url(#' + uid + '-core)"/>' +
+        /* clean white check on top */
+        '<path d="M8.4 12.1 L10.9 14.6 L15.7 9.4" fill="none" stroke="#ffffff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>' +
       '</svg>';
   }
+   
+  
    
 
 
