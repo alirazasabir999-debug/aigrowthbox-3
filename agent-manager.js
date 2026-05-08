@@ -692,17 +692,19 @@ const CONFIG = {
           '<div class="am-stats__chart" id="am-stat-chart" aria-label="Mock performance graph"></div>' +
         '</section>' +
 
-                    /* CHARACTER PROMPT Section — Pencil (Edit) and Save controls */
+                            /* CHARACTER PROMPT Section — Strict Lock & Ghost Pencil */
         '<section class="am-modal__section">' +
           '<div class="am-section-title"><span class="am-section-title__dot"></span>CHARACTER_PROMPT (KERNEL)</div>' +
-          '<textarea class="am-prompt" id="am-modal-prompt" rows="4" readonly placeholder="No prompt configured..." style="cursor: default; background: #0a0c0f; color: #888; border: 1px solid #222;"></textarea>' +
+          /* ڈبہ مکمل لاک رہے گا (pointer-events: none) */
+          '<textarea class="am-prompt" id="am-modal-prompt" rows="4" readonly placeholder="No prompt configured..." style="pointer-events: none; background: transparent; color: #888; border: 1px solid #333;"></textarea>' +
           '<div class="am-prompt-controls" style="display: flex; gap: 8px; margin-top: 8px;">' +
-            /* پینسل والا بٹن (EDIT) */
-            '<button type="button" class="am-btn" id="am-edit-prompt-btn" style="flex: 1; background: #1a1d21; color: #fff; border: 1px solid #333; padding: 10px; cursor: pointer;">✎ EDIT</button>' +
-            /* سیو والا بٹن (SAVE) — شروع میں چھپا ہوا ہوگا */
-            '<button type="button" class="am-btn" id="am-save-prompt-btn" style="flex: 3; background: #00f3ff; color: #000; font-weight: bold; border: none; display: none; padding: 10px; cursor: pointer;">SAVE KERNEL</button>' +
+            /* پینسل والا بٹن (RENAME والے ٹرانسپیرنٹ اسٹائل میں) */
+            '<button type="button" class="am-btn am-btn--ghost" id="am-edit-prompt-btn" style="flex: 1; display: flex; justify-content: center; align-items: center; font-size: 18px;" title="Edit Prompt">✎</button>' +
+            /* سیو والا بٹن (شروع میں غائب) */
+            '<button type="button" class="am-btn" id="am-save-prompt-btn" style="flex: 3; background: #00f3ff; color: #000; font-weight: bold; border: none; display: none;">SAVE KERNEL</button>' +
           '</div>' +
         '</section>' +
+       
        
        
 
@@ -1571,7 +1573,7 @@ const CONFIG = {
   };
 
      /* ────────────────────────────────────────────────────────────────────
-     RENAME & SAVE LOGIC (WITH EDIT/LOCK SYSTEM)
+     RENAME & STRICT SAVE LOGIC (WITH PROPER LOCK/UNLOCK & GHOST PENCIL)
      ──────────────────────────────────────────────────────────────────── */
 
   /* ۱. نام بدلنے کا فنکشن */
@@ -1604,33 +1606,36 @@ const CONFIG = {
     var originalText = btn.textContent;
     btn.textContent = "RENAMED! ✅";
     btn.style.background = "#39ff14";
+    btn.style.color = "#000";
 
     setTimeout(function() {
       btn.textContent = originalText;
       btn.style.background = "";
+      btn.style.color = "";
     }, 2000);
 
     window.AgentManager.decorateCards();
   }
 
-  /* ۲. پینسل (EDIT) بٹن کا فنکشن — خانہ ان لاک کرنے کے لیے */
+  /* ۲. پینسل (EDIT) بٹن دبانے پر ڈبہ مکمل ان لاک کرنا */
   function handleEditPrompt() {
     var area = document.getElementById('am-modal-prompt');
     var editBtn = document.getElementById('am-edit-prompt-btn');
     var saveBtn = document.getElementById('am-save-prompt-btn');
 
-    area.readOnly = false; // لاک کھول دیا
-    area.focus(); // کرسر اندر لے آئے
-    area.style.background = "#111"; // رنگ تھوڑا روشن کیا تاکہ پتہ چلے لکھ سکتے ہیں
+    // تالا کھول دیا
+    area.readOnly = false;
+    area.style.pointerEvents = "auto"; // کلک اور ٹائپنگ ایکٹو کر دی
+    area.focus(); // کرسر ڈبے کے اندر آ جائے گا
+    area.style.background = "#111"; // ڈبہ تھوڑا روشن ہو جائے گا
     area.style.color = "#fff";
-    area.style.borderColor = "#00f3ff";
-    area.style.cursor = "text";
+    area.style.borderColor = "#00f3ff"; // نیلا بارڈر آ جائے گا
     
     editBtn.style.display = "none"; // پینسل والا بٹن غائب
     saveBtn.style.display = "block"; // سیو والا بٹن ظاہر
   }
 
-  /* ۳. سیو بٹن کا فنکشن — ڈیٹا محفوظ اور دوبارہ لاک کرنے کے لیے */
+  /* ۳. سیو بٹن دبانے پر پکا لاک کرنا اور پینسل واپس لانا */
   function handleSavePromptAction() {
     var area = document.getElementById('am-modal-prompt');
     var editBtn = document.getElementById('am-edit-prompt-btn');
@@ -1639,32 +1644,40 @@ const CONFIG = {
 
     if (agent) {
       agent.prompt = area.value.trim();
-      saveBotsList(STATE.agents); // ڈیٹا سیو
+      saveBotsList(STATE.agents); // ڈیٹا محفوظ
 
-      area.readOnly = true; // دوبارہ لاک کر دیا
-      area.style.background = "#0a0c0f";
+      // ڈبہ واپس مکمل لاک کر دیا
+      area.readOnly = true; 
+      area.style.pointerEvents = "none"; // کلک اور ٹائپنگ پکی بند!
+      area.style.background = "transparent";
       area.style.color = "#888";
-      area.style.borderColor = "#222";
-      area.style.cursor = "default";
+      area.style.borderColor = "#333";
       
+      // سیو بٹن کی اینیمیشن
       saveBtn.textContent = "SAVED! ✅";
       saveBtn.style.background = "#39ff14";
 
+      // 1.5 سیکنڈ بعد سیو بٹن غائب اور پینسل واپس آ جائے گی
       setTimeout(function() {
         saveBtn.textContent = "SAVE KERNEL";
         saveBtn.style.background = "#00f3ff";
-        saveBtn.style.display = "none"; // سیو بٹن چھپ گیا
-        editBtn.style.display = "block"; // پینسل بٹن واپس آگیا
+        saveBtn.style.display = "none"; // سیو غائب
+        editBtn.style.display = "flex"; // پینسل واپس آ گئی
       }, 1500);
     }
   }
 
-  /* ۴. تمام بٹنز کو کلک کے ساتھ جوڑنا */
+  /* ۴. بٹنز کو کام پر لگانا */
   document.addEventListener('click', function(e) {
     if (e.target.id === 'am-rename-btn') handleRenameAction();
-    if (e.target.id === 'am-edit-prompt-btn') handleEditPrompt(); // پینسل بٹن کلک
-    if (e.target.id === 'am-save-prompt-btn') handleSavePromptAction(); // سیو بٹن کلک
+    
+    // چونکہ پینسل کے اوپر یا نشان پر کلک ہو سکتا ہے، اس لیے .closest لگایا ہے
+    var editBtn = e.target.closest('#am-edit-prompt-btn');
+    if (editBtn) handleEditPrompt();
+
+    if (e.target.id === 'am-save-prompt-btn') handleSavePromptAction();
   });
+   
    
   
 
