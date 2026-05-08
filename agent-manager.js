@@ -692,20 +692,23 @@ const CONFIG = {
           '<div class="am-stats__chart" id="am-stat-chart" aria-label="Mock performance graph"></div>' +
         '</section>' +
 
-        /* CHARACTER PROMPT */
+                /* CHARACTER PROMPT */
         '<section class="am-modal__section">' +
           '<div class="am-section-title"><span class="am-section-title__dot"></span>CHARACTER_PROMPT</div>' +
-          '<textarea class="am-prompt" id="am-modal-prompt" rows="4" readonly placeholder="No prompt configured"></textarea>' +
+          '<textarea class="am-prompt" id="am-modal-prompt" rows="4" placeholder="بوٹ کا اخلاق یا موڈ یہاں لکھیں..."></textarea>' +
+          '<button type="button" class="am-btn am-btn--save" id="am-save-prompt-btn" style="margin-top:8px; width:100%; background:#00f3ff; color:#000; font-weight:bold; border:none; padding:8px; cursor:pointer;">SAVE KERNEL</button>' +
         '</section>' +
 
         /* RENAME ROW — 100% free, unlocked for all users / all plans */
         '<section class="am-modal__section">' +
           '<div class="am-section-title"><span class="am-section-title__dot"></span>RENAME_AGENT</div>' +
           '<div class="am-rename-row">' +
-            '<input class="am-input" id="am-rename-input" type="text" placeholder="New designation //" maxlength="32" />' +
+            '<input class="am-input" id="am-rename-input" type="text" placeholder="نیا نام لکھیں //" maxlength="32" />' +
             '<button type="button" class="am-btn am-btn--ghost" id="am-rename-btn" aria-label="Rename agent">RENAME</button>' +
           '</div>' +
+          '<div id="am-rename-error" style="color:#ff4444; font-size:11px; margin-top:5px; display:none;"></div>' +
         '</section>' +
+       
 
         /* ╔══════════════════════════════════════════════════════════════╗
            ║  BADGE STATE MACHINE  (replaces the old upgrade block)       ║
@@ -1557,5 +1560,51 @@ const CONFIG = {
     simulateAddMockAgent: simulateAddMockAgent,
     simulateAgentTier   : simulateAgentTier
   };
+
+     /* نام بدلنے اور ڈپلیکیٹ چیک کرنے کا فنکشن */
+  function handleRenameAction() {
+    var input = document.getElementById('am-rename-input');
+    var errorEl = document.getElementById('am-rename-error');
+    var newName = input.value.trim();
+    var agent = STATE.agents.find(function(a) { return a.id === STATE.activeAgentId; });
+
+    if (!newName || !agent) return;
+
+    // نام چیک کرنے کا لوجک: کیا یہ نام پہلے سے موجود ہے؟
+    var isDuplicate = STATE.agents.some(function(a) {
+      return a.name.toLowerCase() === newName.toLowerCase() && a.id !== agent.id;
+    });
+
+    if (isDuplicate) {
+      errorEl.textContent = "⚠️ یہ نام پہلے سے کسی اور بوٹ کا ہے!";
+      errorEl.style.display = "block";
+      return;
+    }
+
+    agent.name = newName;
+    saveBotsList(STATE.agents); // ڈیٹا سیو کرنا
+    document.getElementById('am-modal-title').textContent = newName;
+    errorEl.style.display = "none";
+    alert("✅ نام بدل گیا!");
+    window.AgentManager.decorateCards();
+  }
+
+  /* پرامپٹ سیو کرنے کا فنکشن */
+  function handleSavePromptAction() {
+    var promptText = document.getElementById('am-modal-prompt').value.trim();
+    var agent = STATE.agents.find(function(a) { return a.id === STATE.activeAgentId; });
+    if (agent) {
+      agent.prompt = promptText;
+      saveBotsList(STATE.agents);
+      alert("✅ بوٹ کا اخلاق سیو ہو گیا!");
+    }
+  }
+
+  /* بٹنز کو کلک کے ساتھ جوڑنا */
+  document.addEventListener('click', function(e) {
+    if (e.target.id === 'am-rename-btn') handleRenameAction();
+    if (e.target.id === 'am-save-prompt-btn') handleSavePromptAction();
+  });
+   
 
 })();
