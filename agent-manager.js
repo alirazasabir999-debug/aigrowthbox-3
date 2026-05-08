@@ -1563,8 +1563,13 @@ const CONFIG = {
     simulateAgentTier   : simulateAgentTier
   };
 
-     /* نام بدلنے اور ڈپلیکیٹ چیک کرنے کا فنکشن */
+     /* ────────────────────────────────────────────────────────────────────
+     RENAME & SAVE LOGIC (WITH FULL ANIMATIONS & FEEDBACK)
+     ──────────────────────────────────────────────────────────────────── */
+
+  /* ۱. نام بدلنے اور ڈپلیکیٹ چیک کرنے کا فنکشن (اینیمیشن کے ساتھ) */
   function handleRenameAction() {
+    var btn = document.getElementById('am-rename-btn');
     var input = document.getElementById('am-rename-input');
     var errorEl = document.getElementById('am-rename-error');
     var newName = input.value.trim();
@@ -1580,33 +1585,71 @@ const CONFIG = {
     if (isDuplicate) {
       errorEl.textContent = "⚠️ یہ نام پہلے سے کسی اور بوٹ کا ہے!";
       errorEl.style.display = "block";
+      input.style.borderColor = "#ff4444"; // ان پٹ بارڈر لال ہو جائے گا
       return;
     }
 
+    // اگر نام ٹھیک ہے تو سیو کریں اور اینیمیشن دکھائیں
     agent.name = newName;
-    saveBotsList(STATE.agents); // ڈیٹا سیو کرنا
-    document.getElementById('am-modal-title').textContent = newName;
+    saveBotsList(STATE.agents); // ڈیٹا میموری میں سیو کرنا
+    
+    document.getElementById('am-modal-title').textContent = newName; // ٹائٹل اپڈیٹ
     errorEl.style.display = "none";
-    alert("✅ نام بدل گیا!");
-    window.AgentManager.decorateCards();
+    input.style.borderColor = "#333";
+
+    // --- بصری اثرات (Animation) ---
+    var originalText = btn.textContent;
+    btn.textContent = "RENAMED! ✅";
+    btn.style.background = "#39ff14"; // سبز رنگ (کامیابی)
+    btn.style.boxShadow = "0 0 15px #39ff14";
+    btn.style.transform = "scale(0.95)";
+
+    setTimeout(function() {
+      btn.textContent = originalText;
+      btn.style.background = ""; // واپس پرانا اسٹائل
+      btn.style.boxShadow = "";
+      btn.style.transform = "scale(1)";
+    }, 2000);
+
+    window.AgentManager.decorateCards(); // باہر کے کارڈز اپڈیٹ کرنا
   }
 
-  /* پرامپٹ سیو کرنے کا فنکشن */
+  /* ۲. پرامپٹ (Kernel) سیو کرنے کا فنکشن (اینیمیشن کے ساتھ) */
   function handleSavePromptAction() {
+    var btn = document.getElementById('am-save-prompt-btn');
     var promptText = document.getElementById('am-modal-prompt').value.trim();
     var agent = STATE.agents.find(function(a) { return a.id === STATE.activeAgentId; });
+
     if (agent) {
       agent.prompt = promptText;
-      saveBotsList(STATE.agents);
-      alert("✅ بوٹ کا اخلاق سیو ہو گیا!");
+      saveBotsList(STATE.agents); // ڈیٹا سیو ہو گیا
+
+      // --- بصری اثرات (Animation) ---
+      var originalText = btn.textContent;
+      btn.textContent = "SAVED! ✅";
+      btn.style.background = "#39ff14"; // سبز رنگ
+      btn.style.boxShadow = "0 0 20px #39ff14";
+      btn.style.transform = "scale(0.95)";
+
+      setTimeout(function() {
+        btn.textContent = originalText;
+        btn.style.background = "#00f3ff"; // واپس وہی نیلا رنگ
+        btn.style.boxShadow = "none";
+        btn.style.transform = "scale(1)";
+      }, 2000);
     }
   }
 
-  /* بٹنز کو کلک کے ساتھ جوڑنا */
+  /* ۳. بٹنز کو کلک کے ساتھ جوڑنا (Event Listeners) */
   document.addEventListener('click', function(e) {
-    if (e.target.id === 'am-rename-btn') handleRenameAction();
-    if (e.target.id === 'am-save-prompt-btn') handleSavePromptAction();
+    // ری نیم بٹن کا کلک
+    if (e.target.id === 'am-rename-btn') {
+      handleRenameAction();
+    }
+    // سیو کرنل بٹن کا کلک
+    if (e.target.id === 'am-save-prompt-btn') {
+      handleSavePromptAction();
+    }
   });
-   
 
 })();
