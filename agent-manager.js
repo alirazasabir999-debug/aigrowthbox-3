@@ -1013,7 +1013,7 @@ const CONFIG = {
   }
 
 
-  /* ────────────────────────────────────────────────────────────────────
+    /* ────────────────────────────────────────────────────────────────────
      OPEN / POPULATE / CLOSE
      ──────────────────────────────────────────────────────────────────── */
 
@@ -1082,10 +1082,11 @@ const CONFIG = {
     /* Performance graph */
     drawSparkline(m.querySelector('#am-stat-chart'), agent);
 
-    /* Prompt */
+    /* Prompt - FIXED: Always unlocked so you can type character behavior */
     var promptEl = m.querySelector('#am-modal-prompt');
     promptEl.value = agent.prompt || '';
-    promptEl.readOnly = (STATE.user_plan !== 'gold' && STATE.user_plan !== 'pro');
+    promptEl.readOnly = false; // یہاں سے اب یہ ان لاک ہو گیا ہے
+    promptEl.style.pointerEvents = 'auto'; // کلک کو فعال کرنے کے لیے
 
     /* Rename row — always unlocked & enabled. Pre-fill the input with
        the bot's current designation so users can edit it in place. */
@@ -1108,6 +1109,7 @@ const CONFIG = {
     paintAvatarBadge(m, agent);
     paintBadgeState(m, agent);
   }
+   
 
 
   /* ════════════════════════════════════════════════════════════════════
