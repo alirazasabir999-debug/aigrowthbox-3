@@ -446,7 +446,7 @@ const CONFIG = {
      2-BOT LIMIT  ·  Plan-Upgrade-Required UX
      ════════════════════════════════════════════════════════════════════ */
 
-  function isOverLimit() {
+    function isOverLimit() {
     var max = (STATE.user_plan === 'pro' || STATE.user_plan === 'gold') ? Infinity : APP_CONFIG.MAX_AGENTS_FREE;
     return STATE.agents.length >= max;
   }
@@ -495,8 +495,14 @@ const CONFIG = {
           '</div>' +
           '<button type="button" class="am-limit-banner__cta" aria-label="Upgrade to Pro plan">UPGRADE</button>';
         listContainer.parentNode.insertBefore(banner, listContainer);
+        
+        // یہاں ہم نے نیا لنک سیٹ کر دیا ہے
         banner.querySelector('.am-limit-banner__cta').addEventListener('click', function () {
-          openPricingModal('gold');
+          if (typeof openUserStoreModal === 'function') {
+            openUserStoreModal();
+          } else {
+            console.error("User store modal function not found!");
+          }
           _emitUpgradeIntent('plan_limit');
         });
       }
@@ -520,7 +526,8 @@ const CONFIG = {
     banner.classList.remove('am-flash');
     void banner.offsetWidth;
     banner.classList.add('am-flash');
-  }
+           }
+                             
 
 
   /* ════════════════════════════════════════════════════════════════════
