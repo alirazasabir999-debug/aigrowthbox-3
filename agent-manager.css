@@ -1,0 +1,1622 @@
+/* ════════════════════════════════════════════════════════════════════════
+   AGENT MANAGER  ·  Cyberpunk Dashboard Modal
+   ════════════════════════════════════════════════════════════════════════
+   Every selector is namespaced with `.am-` so this stylesheet can never
+   collide with style.css, verified-pro.css, or leaderboard.css.
+
+   THEME TOKENS
+     --am-cyan      Primary cyber-blue                #00f5ff
+     --am-gold      Verified Pro / Gold tier accent   #ffb800
+     --am-silver    Silver tier accent                #c8d8e0
+     --am-crimson   Danger / delete                   #ff4d4d
+     --am-bg-1/2/3  Layered backgrounds for the panel
+   ════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --am-cyan        : #00f5ff;
+  --am-cyan-soft   : #00f5ff33;
+  --am-cyan-glow   : 0 0 12px #00f5ff80;
+  --am-gold        : #ffb800;
+  --am-gold-soft   : #ffb80033;
+  --am-gold-glow   : 0 0 14px #ffb80088;
+  --am-silver      : #c8d8e0;
+  --am-silver-soft : #c8d8e022;
+  --am-crimson     : #ff4d4d;
+  --am-crimson-soft: #ff4d4d22;
+  --am-text        : #d6f4ff;
+  --am-text-dim    : #6c8b9a;
+  --am-bg-0        : rgba(2, 6, 11, 0.92);
+  --am-bg-1        : #060a12;
+  --am-bg-2        : #0b121d;
+  --am-bg-3        : #11192a;
+  --am-line        : #1a2a3a;
+  --am-mono        : 'Share Tech Mono', 'JetBrains Mono', ui-monospace, monospace;
+}
+
+
+/* ────────────────────────────────────────────────────────────────────
+   PLAN UPGRADE BANNER
+   ──────────────────────────────────────────────────────────────────── */
+.am-limit-banner {
+  display          : flex;
+  align-items      : center;
+  gap              : 12px;
+  padding          : 10px 14px;
+  margin           : 10px 0 12px;
+  background       :
+    linear-gradient(180deg, rgba(255, 184, 0, 0.10), rgba(255, 184, 0, 0.02)),
+    var(--am-bg-2);
+  border           : 1px solid var(--am-gold-soft);
+  border-radius    : 6px;
+  color            : var(--am-text);
+  font-family      : var(--am-mono);
+  font-size        : 11px;
+  letter-spacing   : 0.06em;
+  box-shadow       : inset 0 0 18px rgba(255, 184, 0, 0.05), 0 0 12px rgba(255, 184, 0, 0.18);
+  position         : relative;
+  overflow         : hidden;
+}
+.am-limit-banner__icon {
+  flex             : 0 0 auto;
+  display          : grid;
+  place-items      : center;
+  width            : 28px;
+  height           : 28px;
+  border           : 1px solid var(--am-gold);
+  border-radius    : 4px;
+  color            : var(--am-gold);
+  background       : rgba(255, 184, 0, 0.08);
+  text-shadow      : var(--am-gold-glow);
+}
+.am-limit-banner__body {
+  flex             : 1 1 auto;
+  display          : flex;
+  flex-direction   : column;
+  gap              : 2px;
+  min-width        : 0;
+}
+.am-limit-banner__title {
+  color            : var(--am-gold);
+  font-weight      : 700;
+  letter-spacing   : 0.16em;
+  text-shadow      : 0 0 6px var(--am-gold-soft);
+}
+.am-limit-banner__sub {
+  color            : var(--am-text-dim);
+  font-size        : 10px;
+  letter-spacing   : 0.04em;
+}
+.am-limit-banner__cta {
+  flex             : 0 0 auto;
+  padding          : 7px 14px;
+  border           : 1px solid var(--am-gold);
+  background       : rgba(255, 184, 0, 0.08);
+  color            : var(--am-gold);
+  font-family      : var(--am-mono);
+  font-size        : 10px;
+  letter-spacing   : 0.18em;
+  border-radius    : 4px;
+  cursor           : pointer;
+  transition       : background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  text-shadow      : 0 0 6px var(--am-gold-soft);
+}
+.am-limit-banner__cta:hover {
+  background       : rgba(255, 184, 0, 0.18);
+  box-shadow       : 0 0 12px rgba(255, 184, 0, 0.45);
+  transform        : translateY(-1px);
+}
+.am-limit-banner.am-flash {
+  animation        : am-banner-flash 0.65s ease;
+}
+@keyframes am-banner-flash {
+  0%, 100% { box-shadow: inset 0 0 18px rgba(255, 184, 0, 0.05),  0 0 12px rgba(255, 184, 0, 0.18); }
+  40%      { box-shadow: inset 0 0 28px rgba(255, 184, 0, 0.25),  0 0 26px rgba(255, 184, 0, 0.65); }
+}
+
+
+/* ────────────────────────────────────────────────────────────────────
+   LOCKED REGISTER BUTTON
+   ──────────────────────────────────────────────────────────────────── */
+.am-locked {
+  position         : relative;
+  opacity          : 0.55;
+  filter           : grayscale(0.3);
+  cursor           : not-allowed !important;
+}
+.am-locked::after {
+  content          : '\01F512';
+  position         : absolute;
+  right            : 8px;
+  top              : 50%;
+  transform        : translateY(-50%);
+  font-size        : 10px;
+  color            : var(--am-gold);
+  text-shadow      : 0 0 6px var(--am-gold-soft);
+  pointer-events   : none;
+}
+
+
+/* ────────────────────────────────────────────────────────────────────
+   INLINE NAME BADGE  ·  the only tier marker shown next to a bot name
+   ────────────────────────────────────────────────────────────────────
+   Replaces the old text plan-pill AND the avatar cutout overlay. Only
+   one badge ever renders per name (gold strictly supersedes silver). */
+.am-name-badge {
+  display          : inline-flex;
+  align-items      : center;
+  justify-content  : center;
+  width            : 16px;
+  height           : 16px;
+  margin-left      : 6px;
+  flex             : 0 0 auto;
+  vertical-align   : middle;
+  position         : relative;
+  cursor           : help;
+  pointer-events   : auto;
+}
+.am-name-badge svg {
+  width            : 100%;
+  height           : 100%;
+  display          : block;
+  overflow         : visible;
+}
+/* Gold (Verified Pro) — animated golden halo */
+.am-name-badge--gold {
+  filter           :
+    drop-shadow(0 0 4px #ffb800)
+    drop-shadow(0 0 9px rgba(255, 184, 0, 0.55));
+  animation        : am-name-badge-gold 2.4s ease-in-out infinite;
+}
+@keyframes am-name-badge-gold {
+  0%, 100% { filter: drop-shadow(0 0 4px #ffb800) drop-shadow(0 0 9px rgba(255, 184, 0, 0.55)); }
+  50%      { filter: drop-shadow(0 0 7px #ffd24a) drop-shadow(0 0 16px rgba(255, 184, 0, 0.85)); }
+}
+/* Silver (metallic) — softer chrome halo */
+.am-name-badge--silver {
+  filter           :
+    drop-shadow(0 0 3px #e6edf2)
+    drop-shadow(0 0 7px rgba(200, 216, 224, 0.55));
+  animation        : am-name-badge-silver 2.6s ease-in-out infinite;
+}
+@keyframes am-name-badge-silver {
+  0%, 100% { filter: drop-shadow(0 0 3px #e6edf2) drop-shadow(0 0 7px rgba(200, 216, 224, 0.55)); }
+  50%      { filter: drop-shadow(0 0 6px #ffffff) drop-shadow(0 0 12px rgba(200, 216, 224, 0.8));  }
+}
+/* Slightly larger inline badge when used next to the modal title */
+.am-modal__title + .am-name-badge {
+  width            : 22px;
+  height           : 22px;
+  margin-left      : 8px;
+}
+
+/* Sit nicely inside the bot card header alongside the name */
+.bot-card-name + .am-name-badge {
+  margin-right     : 4px;
+}
+
+
+/* ────────────────────────────────────────────────────────────────────
+   LEGACY OVERLAYS — fully neutralised
+   ────────────────────────────────────────────────────────────────────
+   The old "cutout" tier circle on the avatar and the BASIC / SILVER
+   text pills on cards have been removed from the rendering pipeline.
+   The selectors below force-hide any stale node a previously-loaded
+   build may have left in the DOM so the avatar always reads as a
+   perfectly clean circle. */
+.am-card-tier,
+.am-plan-pill,
+.am-avatar-badge {
+  display          : none !important;
+}
+
+
+/* ────────────────────────────────────────────────────────────────────
+   PER-CARD ENHANCEMENTS  ·  manage button + plan pill + tier overlay
+   ──────────────────────────────────────────────────────────────────── */
+.am-manage-btn {
+  margin-left      : auto;
+  display          : inline-flex;
+  align-items      : center;
+  gap              : 5px;
+  padding          : 5px 9px;
+  font-family      : var(--am-mono);
+  font-size        : 9px;
+  letter-spacing   : 0.16em;
+  color            : var(--am-cyan);
+  background       : rgba(0, 245, 255, 0.06);
+  border           : 1px solid var(--am-cyan-soft);
+  border-radius    : 3px;
+  cursor           : pointer;
+  text-shadow      : 0 0 4px var(--am-cyan-soft);
+  transition       : background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+  flex             : 0 0 auto;
+}
+.am-manage-btn:hover {
+  background       : rgba(0, 245, 255, 0.14);
+  border-color     : var(--am-cyan);
+  box-shadow       : 0 0 10px rgba(0, 245, 255, 0.45);
+  transform        : translateY(-1px);
+}
+.am-manage-btn:focus-visible {
+  outline          : 1px solid var(--am-cyan);
+  outline-offset   : 2px;
+}
+.am-manage-btn svg { display: block; }
+
+.am-plan-pill {
+  display          : inline-flex;
+  align-items      : center;
+  padding          : 2px 7px;
+  margin-left      : 8px;
+  font-family      : var(--am-mono);
+  font-size        : 8px;
+  letter-spacing   : 0.18em;
+  border-radius    : 3px;
+  border           : 1px solid currentColor;
+  flex             : 0 0 auto;
+}
+.am-plan-pill--basic  { color: #5fb6c8;        background: rgba(95, 182, 200, 0.08); }
+.am-plan-pill--silver { color: var(--am-silver); background: var(--am-silver-soft); text-shadow: 0 0 4px var(--am-silver-soft); }
+.am-plan-pill--gold,
+.am-plan-pill--pro    {
+  color            : var(--am-gold);
+  background       : var(--am-gold-soft);
+  text-shadow      : 0 0 6px var(--am-gold-soft);
+  box-shadow       : 0 0 6px rgba(255, 184, 0, 0.35);
+}
+
+/* Tier badge floating in the corner of every .bot-card avatar so the
+   global tier propagation is visible without opening the manager modal. */
+.am-card-tier {
+  position         : absolute;
+  bottom           : -4px;
+  right            : -4px;
+  width            : 24px;
+  height           : 24px;
+  display          : grid;
+  place-items      : center;
+  background       : var(--am-bg-1);
+  border-radius    : 50%;
+  border           : 1px solid var(--am-line);
+  pointer-events   : none;
+  z-index          : 3;
+}
+.am-card-tier svg { display: block; }
+.am-card-tier--silver {
+  border-color     : var(--am-silver);
+  box-shadow       : 0 0 6px rgba(200, 216, 224, 0.55);
+}
+.am-card-tier--pro {
+  border-color     : var(--am-gold);
+  box-shadow       : 0 0 9px rgba(255, 184, 0, 0.7);
+  animation        : am-tier-orbit 2.4s ease-in-out infinite;
+}
+@keyframes am-tier-orbit {
+  0%, 100% { box-shadow: 0 0 6px rgba(255, 184, 0, 0.55); }
+  50%      { box-shadow: 0 0 12px rgba(255, 184, 0, 0.95); }
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   MODAL  ·  overlay + panel
+   ════════════════════════════════════════════════════════════════════ */
+
+body.am-no-scroll { overflow: hidden; }
+
+.am-modal {
+  position         : fixed;
+  inset            : 0;
+  display          : grid;
+  place-items      : center;
+  padding          : 24px 16px;
+  z-index          : 9999;
+  visibility       : hidden;
+  opacity          : 0;
+  pointer-events   : none;
+  transition       : opacity 0.18s ease, visibility 0s linear 0.18s;
+}
+.am-modal.am-modal--open {
+  visibility       : visible;
+  opacity          : 1;
+  pointer-events   : auto;
+  transition       : opacity 0.2s ease;
+}
+.am-modal__backdrop {
+  position         : absolute;
+  inset            : 0;
+  background       :
+    radial-gradient(circle at 50% 35%, rgba(0, 245, 255, 0.08), transparent 60%),
+    rgba(0, 0, 0, 0.78);
+  backdrop-filter  : blur(6px) saturate(120%);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+}
+
+.am-modal__panel {
+  position         : relative;
+  width            : min(560px, 100%);
+  max-height       : 90vh;
+  overflow-y       : auto;
+  padding          : 22px 20px 18px;
+  background       :
+    linear-gradient(180deg, rgba(0, 245, 255, 0.04), transparent 30%),
+    var(--am-bg-1);
+  border           : 1px solid var(--am-cyan-soft);
+  border-radius    : 6px;
+  box-shadow       :
+    0 0 0 1px rgba(0, 245, 255, 0.08),
+    0 0 30px rgba(0, 245, 255, 0.18),
+    inset 0 0 30px rgba(0, 245, 255, 0.04);
+  color            : var(--am-text);
+  font-family      : var(--am-mono);
+  transform        : translateY(8px) scale(0.985);
+  transition       : transform 0.2s ease;
+}
+.am-modal--open .am-modal__panel {
+  transform        : translateY(0) scale(1);
+}
+
+.am-modal__corner {
+  position         : absolute;
+  width            : 12px;
+  height           : 12px;
+  border           : 1px solid var(--am-cyan);
+  pointer-events   : none;
+  filter           : drop-shadow(0 0 4px var(--am-cyan-soft));
+}
+.am-modal__corner--tl { top:    -1px; left:  -1px; border-right: 0; border-bottom: 0; }
+.am-modal__corner--tr { top:    -1px; right: -1px; border-left:  0; border-bottom: 0; }
+.am-modal__corner--bl { bottom: -1px; left:  -1px; border-right: 0; border-top:    0; }
+.am-modal__corner--br { bottom: -1px; right: -1px; border-left:  0; border-top:    0; }
+
+.am-modal__panel::-webkit-scrollbar              { width: 6px; }
+.am-modal__panel::-webkit-scrollbar-track        { background: rgba(3, 7, 11, 0.6); }
+.am-modal__panel::-webkit-scrollbar-thumb        {
+  background: linear-gradient(180deg, rgba(0, 245, 255, 0.55), rgba(0, 102, 255, 0.55));
+  border-radius: 3px;
+  box-shadow: 0 0 6px rgba(0, 245, 255, 0.4);
+}
+.am-modal__panel { scrollbar-width: thin; scrollbar-color: rgba(0, 245, 255, 0.45) rgba(3, 7, 11, 0.6); }
+
+
+/* ────────────────────────────────────────────────────────────────────
+   HEADER
+   ──────────────────────────────────────────────────────────────────── */
+.am-modal__header {
+  display          : flex;
+  align-items      : center;
+  gap              : 14px;
+  margin-bottom    : 18px;
+  padding-bottom   : 14px;
+  border-bottom    : 1px solid var(--am-line);
+}
+.am-modal__avatar {
+  position         : relative;
+  width            : 56px;
+  height           : 56px;
+  flex             : 0 0 auto;
+  border           : 1px solid var(--am-cyan);
+  border-radius    : 50%;
+  background       : rgba(0, 245, 255, 0.06);
+  display          : grid;
+  place-items      : center;
+  overflow         : visible;       /* let the tier overlay extend past the circle */
+  box-shadow       : 0 0 16px rgba(0, 245, 255, 0.35), inset 0 0 12px rgba(0, 245, 255, 0.18);
+}
+.am-modal__avatar-glyph {
+  font-family      : var(--am-mono);
+  font-size        : 26px;
+  color            : var(--am-cyan);
+  text-shadow      : 0 0 8px rgba(0, 245, 255, 0.8);
+}
+.am-modal__avatar-img {
+  display          : none;
+  width            : 100%;
+  height           : 100%;
+  object-fit       : cover;
+  border-radius    : 50%;
+}
+
+/* Avatar tier overlay — silver in state 2, gold in state 3 */
+.am-avatar-badge {
+  position         : absolute;
+  bottom           : -6px;
+  right            : -8px;
+  width            : 28px;
+  height           : 28px;
+  display          : grid;
+  place-items      : center;
+  background       : var(--am-bg-1);
+  border-radius    : 50%;
+  border           : 1px solid var(--am-line);
+  pointer-events   : none;
+  z-index          : 4;
+}
+.am-avatar-badge svg { display: block; }
+.am-avatar-badge--silver {
+  border-color     : var(--am-silver);
+  box-shadow       : 0 0 8px rgba(200, 216, 224, 0.55);
+}
+.am-avatar-badge--pro {
+  border-color     : var(--am-gold);
+  box-shadow       : 0 0 12px rgba(255, 184, 0, 0.85);
+  animation        : am-avatar-badge-pulse 2.2s ease-in-out infinite;
+}
+@keyframes am-avatar-badge-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 184, 0, 0.55); }
+  50%      { box-shadow: 0 0 20px rgba(255, 184, 0, 0.95); }
+}
+
+.am-modal__title-block {
+  flex             : 1 1 auto;
+  min-width        : 0;
+}
+.am-modal__title {
+  margin           : 0 0 4px;
+  font-family      : var(--am-mono);
+  font-size        : 17px;
+  letter-spacing   : 0.06em;
+  color            : var(--am-text);
+  text-shadow      : 0 0 6px rgba(0, 245, 255, 0.45);
+  word-break       : break-word;
+}
+.am-modal__sub {
+  display          : flex;
+  align-items      : center;
+  gap              : 8px;
+  font-size        : 10px;
+  color            : var(--am-text-dim);
+  letter-spacing   : 0.06em;
+  flex-wrap        : wrap;
+}
+.am-modal__id {
+  display          : inline-block;
+  padding          : 1px 6px;
+  border           : 1px solid var(--am-line);
+  border-radius    : 3px;
+  background       : var(--am-bg-2);
+}
+.am-modal__plan {
+  display          : inline-block;
+  padding          : 2px 7px;
+  border-radius    : 3px;
+  border           : 1px solid currentColor;
+  font-size        : 9px;
+  letter-spacing   : 0.18em;
+}
+.am-modal__plan--basic  { color: #5fb6c8;        background: rgba(95, 182, 200, 0.10); }
+.am-modal__plan--silver { color: var(--am-silver); background: var(--am-silver-soft); }
+.am-modal__plan--gold,
+.am-modal__plan--pro    {
+  color            : var(--am-gold);
+  background       : var(--am-gold-soft);
+  text-shadow      : 0 0 6px var(--am-gold-soft);
+  box-shadow       : 0 0 10px rgba(255, 184, 0, 0.35);
+}
+
+.am-modal__close {
+  flex             : 0 0 auto;
+  width            : 28px;
+  height           : 28px;
+  display          : grid;
+  place-items      : center;
+  background       : transparent;
+  border           : 1px solid var(--am-line);
+  color            : var(--am-text-dim);
+  border-radius    : 4px;
+  cursor           : pointer;
+  transition       : color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.am-modal__close:hover {
+  color            : var(--am-cyan);
+  border-color     : var(--am-cyan);
+  background       : rgba(0, 245, 255, 0.06);
+}
+
+
+/* ────────────────────────────────────────────────────────────────────
+   SECTIONS
+   ──────────────────────────────────────────────────────────────────── */
+.am-modal__section { margin-bottom: 16px; }
+.am-section-title {
+  display          : flex;
+  align-items      : center;
+  gap              : 8px;
+  font-family      : var(--am-mono);
+  font-size        : 10px;
+  letter-spacing   : 0.18em;
+  color            : var(--am-cyan);
+  text-shadow      : 0 0 4px rgba(0, 245, 255, 0.4);
+  margin-bottom    : 9px;
+  text-transform   : uppercase;
+}
+.am-section-title__dot {
+  width            : 6px;
+  height           : 6px;
+  border-radius    : 50%;
+  background       : var(--am-cyan);
+  box-shadow       : 0 0 6px var(--am-cyan);
+}
+.am-section-title--danger {
+  color            : var(--am-crimson);
+  text-shadow      : 0 0 4px rgba(255, 77, 77, 0.5);
+}
+.am-section-title--danger .am-section-title__dot {
+  background       : var(--am-crimson);
+  box-shadow       : 0 0 6px var(--am-crimson);
+}
+
+
+/* ────────────────────────────────────────────────────────────────────
+   STATS
+   ──────────────────────────────────────────────────────────────────── */
+.am-stats__row {
+  display          : grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap              : 8px;
+  margin-bottom    : 10px;
+}
+.am-stats__cell {
+  display          : flex;
+  flex-direction   : column;
+  gap              : 4px;
+  padding          : 8px 10px;
+  background       : var(--am-bg-2);
+  border           : 1px solid var(--am-line);
+  border-radius    : 4px;
+}
+.am-stats__label {
+  font-size        : 9px;
+  letter-spacing   : 0.16em;
+  color            : var(--am-text-dim);
+}
+.am-stats__value {
+  font-size        : 16px;
+  letter-spacing   : 0.04em;
+  color            : var(--am-cyan);
+  text-shadow      : 0 0 6px rgba(0, 245, 255, 0.4);
+  word-break       : break-word;
+}
+.am-stats__chart {
+  height           : 64px;
+  background       :
+    linear-gradient(0deg, rgba(0, 245, 255, 0.04), transparent),
+    repeating-linear-gradient(90deg, transparent 0 24px, rgba(0, 245, 255, 0.07) 24px 25px),
+    var(--am-bg-2);
+  border           : 1px solid var(--am-line);
+  border-radius    : 4px;
+  overflow         : hidden;
+  position         : relative;
+}
+.am-stats__chart-svg { width: 100%; height: 100%; display: block; }
+
+
+/* ────────────────────────────────────────────────────────────────────
+   PROMPT TEXTAREA
+   ──────────────────────────────────────────────────────────────────── */
+.am-prompt {
+  width            : 100%;
+  min-height       : 78px;
+  resize           : vertical;
+  padding          : 9px 10px;
+  background       : var(--am-bg-2);
+  border           : 1px solid var(--am-line);
+  border-radius    : 4px;
+  color            : var(--am-text);
+  font-family      : var(--am-mono);
+  font-size        : 11px;
+  line-height      : 1.5;
+  letter-spacing   : 0.02em;
+  outline          : none;
+  transition       : border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.am-prompt:focus {
+  border-color     : var(--am-cyan);
+  box-shadow       : 0 0 8px rgba(0, 245, 255, 0.35);
+}
+.am-prompt[readonly] { color: var(--am-text-dim); }
+
+
+/* ────────────────────────────────────────────────────────────────────
+   RENAME ROW
+   ──────────────────────────────────────────────────────────────────── */
+.am-rename-row {
+  display          : flex;
+  align-items      : center;
+  gap              : 8px;
+  flex-wrap        : wrap;
+  position         : relative;
+}
+/* Rename is now FREE for everyone — the legacy gold dashed border
+   that signalled "PRO_FEATURE" is intentionally neutralised. */
+.am-rename-row[data-locked="1"]::before { content: none !important; }
+.am-lock-tag                            { display: none !important; }
+
+.am-input {
+  flex             : 1 1 200px;
+  min-width        : 140px;
+  padding          : 8px 10px;
+  background       : var(--am-bg-2);
+  border           : 1px solid var(--am-line);
+  border-radius    : 4px;
+  color            : var(--am-text);
+  font-family      : var(--am-mono);
+  font-size        : 11px;
+  letter-spacing   : 0.04em;
+  outline          : none;
+  transition       : border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.am-input:focus {
+  border-color     : var(--am-cyan);
+  box-shadow       : 0 0 8px rgba(0, 245, 255, 0.35);
+}
+.am-input:disabled {
+  opacity          : 0.55;
+  cursor           : not-allowed;
+}
+
+.am-btn {
+  display          : inline-flex;
+  align-items      : center;
+  gap              : 6px;
+  padding          : 8px 12px;
+  font-family      : var(--am-mono);
+  font-size        : 10px;
+  letter-spacing   : 0.18em;
+  border-radius    : 4px;
+  cursor           : pointer;
+  background       : transparent;
+  color            : var(--am-text-dim);
+  border           : 1px solid var(--am-line);
+  transition       : color 0.15s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.am-btn:hover:not(:disabled) {
+  color            : var(--am-cyan);
+  border-color     : var(--am-cyan);
+  background       : rgba(0, 245, 255, 0.06);
+  box-shadow       : 0 0 8px rgba(0, 245, 255, 0.3);
+  transform        : translateY(-1px);
+}
+.am-btn:disabled {
+  opacity          : 0.45;
+  cursor           : not-allowed;
+}
+.am-btn--ghost   { background: transparent; }
+.am-btn--danger  {
+  color            : var(--am-crimson);
+  border-color     : var(--am-crimson);
+  background       : rgba(255, 77, 77, 0.06);
+  text-shadow      : 0 0 6px rgba(255, 77, 77, 0.4);
+}
+.am-btn--danger:hover:not(:disabled) {
+  background       : rgba(255, 77, 77, 0.16);
+  box-shadow       : 0 0 14px rgba(255, 77, 77, 0.55);
+  color            : #fff;
+}
+
+.am-lock-tag {
+  display          : inline-flex;
+  align-items      : center;
+  gap              : 4px;
+  padding          : 3px 7px;
+  font-family      : var(--am-mono);
+  font-size        : 9px;
+  letter-spacing   : 0.18em;
+  color            : var(--am-gold);
+  background       : var(--am-gold-soft);
+  border           : 1px solid var(--am-gold);
+  border-radius    : 3px;
+  text-shadow      : 0 0 6px var(--am-gold-soft);
+  flex             : 0 0 auto;
+}
+.am-rename-row.am-flash .am-lock-tag {
+  animation        : am-lock-pulse 0.6s ease;
+}
+@keyframes am-lock-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 184, 0, 0.0); }
+  40%      { box-shadow: 0 0 0 6px rgba(255, 184, 0, 0.45); }
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   BADGE STATE MACHINE  ·  STATE 1 / STATE 2 / STATE 3
+   ════════════════════════════════════════════════════════════════════ */
+
+.am-badge-state__inner {
+  position         : relative;
+}
+
+/* Base SVG badge — every variant inherits these */
+.am-badge {
+  display          : block;
+  filter           : drop-shadow(0 0 6px rgba(0, 0, 0, 0.5));
+}
+/* Locked / dimmed states for state 1 */
+.am-badge--locked {
+  filter           : grayscale(0.85) brightness(0.55) drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
+  opacity          : 0.55;
+  transition       : filter 0.3s ease, opacity 0.3s ease;
+}
+.am-badge--dim {
+  filter           : grayscale(0.55) brightness(0.75) drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
+  opacity          : 0.75;
+}
+.am-badge--silver {
+  filter           : drop-shadow(0 0 6px rgba(200, 216, 224, 0.5));
+}
+.am-badge--gold {
+  filter           : drop-shadow(0 0 8px rgba(255, 184, 0, 0.7));
+  animation        : am-badge-gold-glow 2.6s ease-in-out infinite;
+}
+@keyframes am-badge-gold-glow {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(255, 184, 0, 0.55)); }
+  50%      { filter: drop-shadow(0 0 14px rgba(255, 184, 0, 0.95)); }
+}
+
+/* ─── Two-column tier row used by STATE 1 + STATE 2 ─── */
+.am-tier-row {
+  display          : grid;
+  grid-template-columns: 1fr 1fr;
+  gap              : 12px;
+  align-items      : stretch;
+}
+.am-tier-row--silver-only {
+  /* STATE 2 reuses the same grid so the visual rhythm stays consistent */
+}
+
+.am-tier-cell {
+  /* Stack the tier badge ABOVE its meta block so the silver shield
+     sits above the progress bar and the gold star sits above the
+     'Upgrade to Premium' button — both highly visible. */
+  display          : flex;
+  flex-direction   : column;
+  align-items      : center;
+  text-align       : center;
+  gap              : 12px;
+  padding          : 16px 12px 14px;
+  background       : var(--am-bg-2);
+  border           : 1px solid var(--am-line);
+  border-radius    : 5px;
+  position         : relative;
+  overflow         : hidden;
+}
+.am-tier-cell::before {
+  /* Subtle scan-line pattern — pure cyber flair, very low intensity */
+  content          : '';
+  position         : absolute;
+  inset            : 0;
+  background       : repeating-linear-gradient(
+                       0deg,
+                       transparent 0,
+                       transparent 3px,
+                       rgba(0, 245, 255, 0.03) 3px,
+                       rgba(0, 245, 255, 0.03) 4px
+                     );
+  pointer-events   : none;
+}
+.am-tier-cell--locked   { border-color: rgba(200, 216, 224, 0.25); }
+.am-tier-cell--unlocked {
+  border-color     : var(--am-silver);
+  box-shadow       : 0 0 10px rgba(200, 216, 224, 0.25), inset 0 0 10px rgba(200, 216, 224, 0.06);
+}
+.am-tier-cell--store {
+  border-color     : var(--am-gold-soft);
+  box-shadow       : inset 0 0 14px rgba(255, 184, 0, 0.06);
+}
+
+.am-tier-cell__badge {
+  flex             : 0 0 auto;
+  display          : grid;
+  place-items      : center;
+  width            : 88px;
+  height           : 88px;
+  position         : relative;
+  z-index          : 1;
+}
+.am-tier-cell__badge svg {
+  width            : 100%;
+  height           : 100%;
+  display          : block;
+  overflow         : visible;
+}
+
+.am-tier-cell__meta {
+  display          : flex;
+  flex-direction   : column;
+  align-items      : center;
+  text-align       : center;
+  gap              : 8px;
+  min-width        : 0;
+  width            : 100%;
+  flex             : 1 1 auto;
+  position         : relative;
+  z-index          : 1;
+}
+/* Center & widen the inline upgrade CTA so the gold star clearly sits
+   ABOVE the button. */
+.am-tier-cell__meta .am-btn-upgrade--inline {
+  align-self       : center;
+  margin-top       : 4px;
+}
+/* Progress bar should span the full cell width below the silver shield. */
+.am-tier-cell__meta .am-progress {
+  width            : 100%;
+}
+.am-tier-cell__label {
+  font-family      : var(--am-mono);
+  font-size        : 10px;
+  letter-spacing   : 0.16em;
+  color            : var(--am-text);
+  text-transform   : uppercase;
+}
+.am-tier-cell__status {
+  font-family      : var(--am-mono);
+  font-size        : 9px;
+  letter-spacing   : 0.18em;
+  color            : var(--am-text-dim);
+  display          : inline-flex;
+  align-items      : center;
+  gap              : 6px;
+}
+.am-tier-cell__status--ok {
+  color            : var(--am-silver);
+  text-shadow      : 0 0 6px rgba(200, 216, 224, 0.55);
+}
+.am-tier-cell__status--ok::before {
+  content          : '';
+  display          : inline-block;
+  width            : 6px;
+  height           : 6px;
+  border-radius    : 50%;
+  background       : var(--am-silver);
+  box-shadow       : 0 0 6px var(--am-silver);
+}
+.am-tier-cell__hint {
+  font-size        : 10px;
+  color            : var(--am-text-dim);
+  letter-spacing   : 0.04em;
+  line-height      : 1.45;
+}
+
+
+/* ─── Neon Progress Bar (only visible in STATE 1) ─── */
+.am-progress {
+  margin-top       : 4px;
+  display          : flex;
+  flex-direction   : column;
+  gap              : 5px;
+}
+.am-progress__track {
+  position         : relative;
+  height           : 8px;
+  background       :
+    linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.2)),
+    var(--am-bg-3);
+  border           : 1px solid rgba(0, 245, 255, 0.25);
+  border-radius    : 999px;
+  overflow         : hidden;
+  box-shadow       : inset 0 0 8px rgba(0, 245, 255, 0.12);
+}
+.am-progress__fill {
+  position         : absolute;
+  inset            : 0 auto 0 0;
+  height           : 100%;
+  width            : 0%;          /* JS animates this from 0 → real % */
+  background       :
+    linear-gradient(90deg,
+      rgba(0, 245, 255, 0.85) 0%,
+      rgba(0, 245, 255, 1)    50%,
+      rgba(0, 102, 255, 0.95) 100%);
+  border-radius    : 999px;
+  box-shadow       :
+    0 0 10px rgba(0, 245, 255, 0.65),
+    inset 0 0 6px rgba(255, 255, 255, 0.35);
+  transition       : width 0.95s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.am-progress__shine {
+  position         : absolute;
+  inset            : 0;
+  pointer-events   : none;
+  background       : repeating-linear-gradient(
+                       45deg,
+                       rgba(255, 255, 255, 0.06) 0,
+                       rgba(255, 255, 255, 0.06) 4px,
+                       transparent 4px,
+                       transparent 8px
+                     );
+  mix-blend-mode   : overlay;
+  border-radius    : 999px;
+}
+.am-progress__caption {
+  display          : flex;
+  align-items      : center;
+  gap              : 4px;
+  font-family      : var(--am-mono);
+  font-size        : 10px;
+  letter-spacing   : 0.04em;
+  color            : var(--am-text-dim);
+}
+.am-progress__cur  { color: var(--am-cyan); text-shadow: 0 0 6px rgba(0, 245, 255, 0.4); }
+.am-progress__sep  { color: var(--am-text-dim); }
+.am-progress__max  { color: var(--am-text-dim); }
+.am-progress__pct  {
+  margin-left      : auto;
+  color            : var(--am-cyan);
+  font-weight      : 700;
+  text-shadow      : 0 0 6px rgba(0, 245, 255, 0.4);
+}
+
+
+/* ─── PREMIUM 3D "Upgrade to Gold" CTA  (the ONLY 3D button in the UI) ───
+   Deliberately scoped to .am-btn-upgrade only. Every other dashboard
+   button keeps its existing flat cyber styling — do NOT extend the 3D
+   treatment to .am-btn, .am-manage-btn, .am-btn-delete, etc. */
+.am-btn-upgrade {
+  display          : inline-flex;
+  align-items      : center;
+  gap              : 8px;
+  padding          : 12px 24px;
+  font-family      : var(--am-mono);
+  font-size        : 11px;
+  letter-spacing   : 0.22em;
+  font-weight      : 700;
+  color            : #2a1a00;
+  background       :
+    linear-gradient(180deg, #fff3a8 0%, #ffd24a 35%, #ffb800 65%, #b87600 100%);
+  border           : 1px solid #d68b00;
+  border-top-color : #fff7d6;
+  border-bottom-color: #7c4c00;
+  border-radius    : 6px;
+  cursor           : pointer;
+  text-shadow      : 0 1px 0 rgba(255, 255, 255, 0.6);
+  /* Layered shadows = depth + bevel + ambient gold halo */
+  box-shadow       :
+    inset 0 1px 0  rgba(255, 255, 255, 0.85),
+    inset 0 -2px 0 rgba(124, 76, 0, 0.55),
+    inset 0 0 10px rgba(255, 255, 255, 0.25),
+    0 1px 0  rgba(255, 235, 153, 0.9),
+    0 4px 0  #8a5a00,
+    0 6px 0  #5a3a00,
+    0 8px 14px rgba(0, 0, 0, 0.55),
+    0 0 18px rgba(255, 184, 0, 0.55);
+  transform        : translateY(0);
+  transition       : transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+  animation        : am-upgrade-pulse 2.2s ease-in-out infinite;
+  position         : relative;
+}
+/* Hover — lift slightly + brighter halo */
+.am-btn-upgrade:hover {
+  transform        : translateY(-1px);
+  filter           : brightness(1.05);
+  box-shadow       :
+    inset 0 1px 0  rgba(255, 255, 255, 0.95),
+    inset 0 -2px 0 rgba(124, 76, 0, 0.55),
+    inset 0 0 12px rgba(255, 255, 255, 0.3),
+    0 1px 0  rgba(255, 235, 153, 0.95),
+    0 5px 0  #8a5a00,
+    0 7px 0  #5a3a00,
+    0 10px 18px rgba(0, 0, 0, 0.55),
+    0 0 28px rgba(255, 184, 0, 0.85);
+}
+/* Active — pressed in, depth collapses */
+.am-btn-upgrade:active {
+  transform        : translateY(4px);
+  box-shadow       :
+    inset 0 2px 4px rgba(124, 76, 0, 0.55),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.35),
+    0 0 0  #8a5a00,
+    0 1px 0  #5a3a00,
+    0 2px 6px rgba(0, 0, 0, 0.55),
+    0 0 16px rgba(255, 184, 0, 0.6);
+}
+.am-btn-upgrade:focus-visible {
+  outline          : 2px solid #fff5d1;
+  outline-offset   : 3px;
+}
+.am-btn-upgrade svg {
+  filter           : drop-shadow(0 1px 0 rgba(255, 255, 255, 0.6));
+}
+.am-btn-upgrade--inline {
+  margin-top       : 4px;
+  padding          : 10px 16px;
+  font-size        : 10px;
+  letter-spacing   : 0.18em;
+  align-self       : flex-start;
+}
+@keyframes am-upgrade-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 1px 0  rgba(255, 255, 255, 0.85),
+      inset 0 -2px 0 rgba(124, 76, 0, 0.55),
+      inset 0 0 10px rgba(255, 255, 255, 0.25),
+      0 1px 0  rgba(255, 235, 153, 0.9),
+      0 4px 0  #8a5a00,
+      0 6px 0  #5a3a00,
+      0 8px 14px rgba(0, 0, 0, 0.55),
+      0 0 18px rgba(255, 184, 0, 0.55);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 0  rgba(255, 255, 255, 0.95),
+      inset 0 -2px 0 rgba(124, 76, 0, 0.55),
+      inset 0 0 14px rgba(255, 255, 255, 0.3),
+      0 1px 0  rgba(255, 235, 153, 0.95),
+      0 4px 0  #8a5a00,
+      0 6px 0  #5a3a00,
+      0 8px 14px rgba(0, 0, 0, 0.55),
+      0 0 28px rgba(255, 184, 0, 0.95);
+  }
+}
+
+
+/* ─── STATE 3 · Max Tier success card ─── */
+.am-tier-success {
+  display          : flex;
+  align-items      : center;
+  gap              : 14px;
+  padding          : 16px 14px;
+  background       :
+    radial-gradient(circle at 18% 50%, rgba(255, 184, 0, 0.18), transparent 55%),
+    linear-gradient(180deg, rgba(255, 184, 0, 0.08), rgba(255, 184, 0, 0.02)),
+    var(--am-bg-2);
+  border           : 1px solid var(--am-gold);
+  border-radius    : 6px;
+  box-shadow       :
+    0 0 22px rgba(255, 184, 0, 0.35),
+    inset 0 0 18px rgba(255, 184, 0, 0.08);
+  animation        : am-tier-success-pulse 2.6s ease-in-out infinite;
+  position         : relative;
+  overflow         : hidden;
+}
+.am-tier-success::before {
+  content          : '';
+  position         : absolute;
+  inset            : 0;
+  background       : repeating-linear-gradient(
+                       0deg,
+                       transparent 0,
+                       transparent 3px,
+                       rgba(255, 184, 0, 0.05) 3px,
+                       rgba(255, 184, 0, 0.05) 4px
+                     );
+  pointer-events   : none;
+}
+@keyframes am-tier-success-pulse {
+  0%, 100% { box-shadow: 0 0 18px rgba(255, 184, 0, 0.35), inset 0 0 18px rgba(255, 184, 0, 0.08); }
+  50%      { box-shadow: 0 0 30px rgba(255, 184, 0, 0.65), inset 0 0 26px rgba(255, 184, 0, 0.18); }
+}
+.am-tier-success__icon {
+  flex             : 0 0 auto;
+  display          : grid;
+  place-items      : center;
+  width            : 76px;
+  height           : 76px;
+  position         : relative;
+  z-index          : 1;
+}
+.am-tier-success__body {
+  display          : flex;
+  flex-direction   : column;
+  gap              : 4px;
+  min-width        : 0;
+  position         : relative;
+  z-index          : 1;
+}
+.am-tier-success__title {
+  font-family      : var(--am-mono);
+  font-size        : 10px;
+  letter-spacing   : 0.22em;
+  color            : var(--am-gold);
+  text-shadow      : 0 0 6px var(--am-gold-soft);
+  text-transform   : uppercase;
+}
+.am-tier-success__name {
+  font-family      : var(--am-mono);
+  font-size        : 18px;
+  letter-spacing   : 0.18em;
+  color            : #fff7d6;
+  text-shadow      :
+    0 0 8px rgba(255, 184, 0, 0.85),
+    0 0 16px rgba(255, 184, 0, 0.55);
+  font-weight      : 700;
+}
+.am-tier-success__sub {
+  font-family      : var(--am-mono);
+  font-size        : 10px;
+  color            : var(--am-text-dim);
+  letter-spacing   : 0.04em;
+  line-height      : 1.5;
+}
+
+
+/* ────────────────────────────────────────────────────────────────────
+   DANGER ZONE
+   ──────────────────────────────────────────────────────────────────── */
+.am-danger-zone {
+  padding          : 12px;
+  border           : 1px dashed rgba(255, 77, 77, 0.45);
+  border-radius    : 5px;
+  background       : rgba(255, 77, 77, 0.04);
+}
+.am-btn-delete {
+  display          : inline-flex;
+  align-items      : center;
+  gap              : 6px;
+  padding          : 8px 14px;
+  background       : transparent;
+  color            : var(--am-crimson);
+  border           : 1px solid var(--am-crimson);
+  border-radius    : 4px;
+  font-family      : var(--am-mono);
+  font-size        : 10px;
+  letter-spacing   : 0.18em;
+  cursor           : pointer;
+  transition       : background 0.15s ease, box-shadow 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  text-shadow      : 0 0 6px rgba(255, 77, 77, 0.4);
+}
+.am-btn-delete:hover:not(:disabled) {
+  background       : rgba(255, 77, 77, 0.14);
+  box-shadow       : 0 0 12px rgba(255, 77, 77, 0.55);
+  color            : #fff;
+  transform        : translateY(-1px);
+}
+.am-btn-delete:disabled { opacity: 0.55; cursor: default; }
+.am-btn-delete--armed   { filter: grayscale(0.4); }
+
+.am-confirm {
+  margin-top       : 12px;
+  padding          : 12px;
+  background       : rgba(255, 77, 77, 0.06);
+  border           : 1px solid var(--am-crimson);
+  border-radius    : 5px;
+  box-shadow       : 0 0 18px rgba(255, 77, 77, 0.25);
+  animation        : am-confirm-in 0.18s ease;
+}
+@keyframes am-confirm-in {
+  from { transform: translateY(-4px); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+.am-confirm__header {
+  display          : flex;
+  align-items      : center;
+  gap              : 8px;
+  font-family      : var(--am-mono);
+  font-size        : 10px;
+  letter-spacing   : 0.18em;
+  color            : var(--am-crimson);
+  text-shadow      : 0 0 6px rgba(255, 77, 77, 0.45);
+  margin-bottom    : 8px;
+}
+.am-confirm__text {
+  margin           : 0 0 10px;
+  font-size        : 11px;
+  color            : var(--am-text);
+  line-height      : 1.5;
+}
+.am-confirm__name-row {
+  display          : flex;
+  align-items      : center;
+  gap              : 8px;
+  margin-bottom    : 8px;
+  flex-wrap        : wrap;
+}
+.am-confirm__target {
+  flex             : 1 1 auto;
+  padding          : 6px 9px;
+  background       : var(--am-bg-2);
+  border           : 1px solid var(--am-crimson);
+  border-radius    : 3px;
+  color            : #fff;
+  font-family      : var(--am-mono);
+  font-size        : 12px;
+  letter-spacing   : 0.04em;
+  word-break       : break-word;
+  text-shadow      : 0 0 6px rgba(255, 77, 77, 0.4);
+  user-select      : all;
+}
+.am-copy-btn {
+  display          : inline-grid;
+  place-items      : center;
+  width            : 30px;
+  height           : 30px;
+  background       : var(--am-bg-2);
+  border           : 1px solid var(--am-line);
+  color            : var(--am-text-dim);
+  border-radius    : 3px;
+  cursor           : pointer;
+  transition       : color 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+  flex             : 0 0 auto;
+}
+.am-copy-btn:hover {
+  color            : var(--am-cyan);
+  border-color     : var(--am-cyan);
+  background       : rgba(0, 245, 255, 0.08);
+  transform        : translateY(-1px);
+}
+.am-copy-btn--ok {
+  color            : #6cff6c;
+  border-color     : #6cff6c;
+  background       : rgba(108, 255, 108, 0.10);
+}
+.am-input--danger {
+  border-color     : var(--am-crimson);
+  background       : rgba(255, 77, 77, 0.04);
+}
+.am-input--danger:focus {
+  border-color     : var(--am-crimson);
+  box-shadow       : 0 0 8px rgba(255, 77, 77, 0.45);
+}
+.am-input--match {
+  border-color     : #6cff6c !important;
+  box-shadow       : 0 0 10px rgba(108, 255, 108, 0.45) !important;
+  color            : #d6ffd6;
+}
+
+.am-confirm__actions {
+  display          : flex;
+  justify-content  : flex-end;
+  gap              : 8px;
+  margin-top       : 10px;
+  flex-wrap        : wrap;
+}
+
+
+/* ────────────────────────────────────────────────────────────────────
+   RESPONSIVE
+   ──────────────────────────────────────────────────────────────────── */
+@media (max-width: 540px) {
+  .am-modal__panel        { padding: 18px 14px 14px; }
+  .am-modal__avatar       { width: 46px; height: 46px; }
+  .am-modal__title        { font-size: 15px; }
+  .am-stats__row          { grid-template-columns: 1fr 1fr; }
+  .am-stats__cell:nth-child(3) { grid-column: 1 / -1; }
+  .am-btn-upgrade         { width: 100%; justify-content: center; }
+  .am-rename-row .am-btn  { flex: 1 1 auto; justify-content: center; }
+  .am-confirm__actions    { justify-content: stretch; }
+  .am-confirm__actions .am-btn { flex: 1 1 auto; justify-content: center; }
+  /* Stack the two-column tier row on small screens so badges stay legible */
+  .am-tier-row            { grid-template-columns: 1fr; }
+  .am-tier-success        { flex-direction: column; text-align: center; }
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   PRICING POPUP MODAL  ·  Google Play checkout gateway
+   ════════════════════════════════════════════════════════════════════
+   Independent of the main agent-manager modal — can stack on top of it
+   (uses a higher z-index). Two variants:
+     · .am-pricing--gold   → cyber-gold premium subscription
+     · .am-pricing--name   → silver one-time identity refresh        */
+
+.am-pricing {
+  position         : fixed;
+  inset            : 0;
+  display          : grid;
+  place-items      : center;
+  padding          : 24px 16px;
+  z-index          : 10001;
+  visibility       : hidden;
+  opacity          : 0;
+  pointer-events   : none;
+  transition       : opacity 0.18s ease, visibility 0s linear 0.18s;
+}
+.am-pricing.am-pricing--open {
+  visibility       : visible;
+  opacity          : 1;
+  pointer-events   : auto;
+  transition       : opacity 0.2s ease;
+}
+.am-pricing__backdrop {
+  position         : absolute;
+  inset            : 0;
+  /* Pure matte-black wash with a faint cyan vignette to match the panel */
+  background       :
+    radial-gradient(circle at 50% 30%, rgba(0, 245, 255, 0.08), transparent 60%),
+    rgba(0, 0, 0, 0.88);
+  backdrop-filter  : blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+}
+
+/* ── PANEL · matte black/grey + 2px neon-cyan border ──
+   Cyan is the base theme; the gold variant adds a warm accent halo. */
+.am-pricing__panel {
+  position         : relative;
+  width            : min(440px, 100%);
+  max-height       : 90vh;
+  overflow-y       : auto;
+  padding          : 28px 24px 20px;
+  /* Deep matte black/grey gradient — looks like brushed obsidian */
+  background       :
+    linear-gradient(180deg, #15181c 0%, #0a0c0f 100%);
+  border           : 2px solid var(--am-cyan);
+  border-radius    : 8px;
+  box-shadow       :
+    0 0 0 1px rgba(0, 245, 255, 0.15),
+    0 0 36px rgba(0, 245, 255, 0.35),
+    inset 0 0 24px rgba(0, 245, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  color            : var(--am-text);
+  font-family      : var(--am-mono);
+  text-align       : center;
+  transform        : translateY(8px) scale(0.985);
+  transition       : transform 0.2s ease, box-shadow 0.2s ease;
+}
+.am-pricing--open .am-pricing__panel {
+  transform        : translateY(0) scale(1);
+}
+
+/* GOLD variant — keep the cyan border, add a warm gold halo + sheen */
+.am-pricing--gold .am-pricing__panel {
+  background       :
+    linear-gradient(180deg, rgba(255, 184, 0, 0.06), transparent 28%),
+    linear-gradient(180deg, #15181c 0%, #0a0c0f 100%);
+  box-shadow       :
+    0 0 0 1px rgba(0, 245, 255, 0.15),
+    0 0 36px rgba(0, 245, 255, 0.4),
+    0 0 60px rgba(255, 184, 0, 0.18),
+    inset 0 0 24px rgba(255, 184, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* SILVER / name-edit variant — pure cyan, slightly cooler halo */
+.am-pricing--name .am-pricing__panel {
+  box-shadow       :
+    0 0 0 1px rgba(0, 245, 255, 0.15),
+    0 0 36px rgba(0, 245, 255, 0.45),
+    inset 0 0 24px rgba(200, 216, 224, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.am-pricing__close {
+  position         : absolute;
+  top              : 10px;
+  right            : 10px;
+  width            : 28px;
+  height           : 28px;
+  display          : grid;
+  place-items      : center;
+  background       : transparent;
+  border           : 1px solid var(--am-line);
+  color            : var(--am-text-dim);
+  border-radius    : 4px;
+  cursor           : pointer;
+  transition       : color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.am-pricing__close:hover {
+  color            : var(--am-cyan);
+  border-color     : var(--am-cyan);
+  background       : rgba(0, 245, 255, 0.06);
+}
+
+.am-pricing__icon {
+  width            : 64px;
+  height           : 64px;
+  margin           : 0 auto 14px;
+  display          : grid;
+  place-items      : center;
+}
+.am-pricing__icon svg { width: 100%; height: 100%; display: block; }
+.am-pricing--gold .am-pricing__icon {
+  filter           :
+    drop-shadow(0 0 8px rgba(255, 184, 0, 0.7))
+    drop-shadow(0 0 16px rgba(255, 138, 0, 0.45));
+  animation        : am-pricing-icon-pulse 2.4s ease-in-out infinite;
+}
+.am-pricing--name .am-pricing__icon {
+  filter           :
+    drop-shadow(0 0 6px rgba(200, 216, 224, 0.65))
+    drop-shadow(0 0 14px rgba(200, 216, 224, 0.4));
+}
+@keyframes am-pricing-icon-pulse {
+  0%, 100% { transform: scale(1);    filter: drop-shadow(0 0 8px rgba(255, 184, 0, 0.6))  drop-shadow(0 0 16px rgba(255, 138, 0, 0.4)); }
+  50%      { transform: scale(1.05); filter: drop-shadow(0 0 14px rgba(255, 184, 0, 0.95)) drop-shadow(0 0 24px rgba(255, 138, 0, 0.65)); }
+}
+
+.am-pricing__eyebrow {
+  font-family      : var(--am-mono);
+  font-size        : 10px;
+  letter-spacing   : 0.28em;
+  color            : var(--am-gold);
+  text-shadow      : 0 0 6px rgba(255, 184, 0, 0.45);
+  margin-bottom    : 6px;
+  text-transform   : uppercase;
+}
+.am-pricing--name .am-pricing__eyebrow {
+  color            : var(--am-silver);
+  text-shadow      : 0 0 6px rgba(200, 216, 224, 0.45);
+}
+.am-pricing__title {
+  margin           : 0 0 8px;
+  font-family      : var(--am-mono);
+  font-size        : 22px;
+  letter-spacing   : 0.06em;
+  color            : #fff7d6;
+  text-shadow      : 0 0 10px rgba(255, 184, 0, 0.6);
+  font-weight      : 700;
+}
+.am-pricing--name .am-pricing__title {
+  color            : #f4f8fc;
+  text-shadow      : 0 0 10px rgba(200, 216, 224, 0.55);
+}
+.am-pricing__sub {
+  margin           : 0 auto 18px;
+  max-width        : 32ch;
+  font-size        : 11px;
+  line-height      : 1.55;
+  color            : var(--am-text-dim);
+  letter-spacing   : 0.02em;
+}
+
+.am-pricing__price-block {
+  display          : inline-flex;
+  align-items      : baseline;
+  justify-content  : center;
+  gap              : 4px;
+  margin-bottom    : 16px;
+  padding          : 10px 18px;
+  background       : var(--am-bg-2);
+  border           : 1px solid var(--am-line);
+  border-radius    : 6px;
+}
+.am-pricing__currency {
+  font-size        : 14px;
+  color            : var(--am-text-dim);
+  letter-spacing   : 0;
+}
+.am-pricing__amount {
+  font-family      : var(--am-mono);
+  font-size        : 38px;
+  font-weight      : 700;
+  letter-spacing   : 0.02em;
+  color            : var(--am-gold);
+  text-shadow      : 0 0 10px rgba(255, 184, 0, 0.45);
+  line-height      : 1;
+}
+.am-pricing--name .am-pricing__amount {
+  color            : #f4f8fc;
+  text-shadow      : 0 0 10px rgba(200, 216, 224, 0.6);
+}
+.am-pricing__period {
+  font-size        : 11px;
+  letter-spacing   : 0.12em;
+  color            : var(--am-text-dim);
+  margin-left      : 4px;
+}
+
+.am-pricing__perks {
+  margin           : 0 0 18px;
+  padding          : 0;
+  list-style       : none;
+  display          : flex;
+  flex-direction   : column;
+  gap              : 8px;
+  text-align       : left;
+}
+.am-pricing__perks li {
+  position         : relative;
+  padding-left     : 22px;
+  font-size        : 11px;
+  line-height      : 1.5;
+  color            : var(--am-text);
+  letter-spacing   : 0.02em;
+}
+.am-pricing__perks li::before {
+  content          : '';
+  position         : absolute;
+  left             : 0;
+  top              : 4px;
+  width            : 14px;
+  height           : 14px;
+  border-radius    : 50%;
+  background       :
+    radial-gradient(circle at 35% 30%, #fff7d6, var(--am-gold) 65%, #b87600 100%);
+  box-shadow       : 0 0 6px rgba(255, 184, 0, 0.65);
+}
+.am-pricing--name .am-pricing__perks li::before {
+  background       :
+    radial-gradient(circle at 35% 30%, #ffffff, var(--am-silver) 65%, #5b6b78 100%);
+  box-shadow       : 0 0 6px rgba(200, 216, 224, 0.6);
+}
+.am-pricing__perks strong {
+  color            : var(--am-gold);
+  font-weight      : 700;
+  text-shadow      : 0 0 4px rgba(255, 184, 0, 0.4);
+}
+
+.am-pricing__actions {
+  display          : flex;
+  flex-direction   : column;
+  gap              : 8px;
+  margin-bottom    : 14px;
+}
+.am-pricing__cta {
+  display          : inline-flex;
+  align-items      : center;
+  justify-content  : center;
+  gap              : 10px;
+  padding          : 13px 18px;
+  font-family      : var(--am-mono);
+  font-size        : 12px;
+  letter-spacing   : 0.16em;
+  font-weight      : 700;
+  color            : #ffffff;
+  background       : linear-gradient(180deg, #1a73e8 0%, #0b58cc 60%, #073a8a 100%);
+  border           : 1px solid #1a73e8;
+  border-radius    : 6px;
+  cursor           : pointer;
+  text-shadow      : 0 1px 1px rgba(0, 0, 0, 0.4);
+  box-shadow       :
+    0 0 14px rgba(26, 115, 232, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.3);
+  transition       : transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+.am-pricing__cta:hover {
+  transform        : translateY(-1px);
+  filter           : brightness(1.08);
+  box-shadow       :
+    0 0 22px rgba(26, 115, 232, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.3);
+}
+.am-pricing__cta:active {
+  transform        : translateY(1px);
+}
+.am-pricing__cta-icon { display: block; }
+
+.am-pricing__cancel {
+  padding          : 10px 14px;
+  background       : transparent;
+  border           : 1px solid var(--am-line);
+  color            : var(--am-text-dim);
+  font-family      : var(--am-mono);
+  font-size        : 10px;
+  letter-spacing   : 0.22em;
+  border-radius    : 4px;
+  cursor           : pointer;
+  transition       : color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.am-pricing__cancel:hover {
+  color            : var(--am-text);
+  border-color     : var(--am-cyan);
+  background       : rgba(0, 245, 255, 0.05);
+}
+
+.am-pricing__legal {
+  font-size        : 9px;
+  line-height      : 1.5;
+  color            : var(--am-text-dim);
+  letter-spacing   : 0.04em;
+  opacity          : 0.85;
+  padding-top      : 10px;
+  border-top       : 1px dashed var(--am-line);
+}
+
+@media (max-width: 480px) {
+  .am-pricing__panel { padding: 24px 18px 16px; }
+  .am-pricing__title { font-size: 19px; }
+  .am-pricing__amount { font-size: 32px; }
+}
+
+
+/* ────────────────────────────────────────────────────────────────────
+   ACCESSIBILITY  ·  reduced-motion
+   ──────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .am-btn-upgrade,
+  .am-limit-banner.am-flash,
+  .am-confirm,
+  .am-rename-row.am-flash .am-lock-tag,
+  .am-progress__fill,
+  .am-badge--gold,
+  .am-tier-success,
+  .am-card-tier--pro,
+  .am-avatar-badge--pro,
+  .am-name-badge--gold,
+  .am-name-badge--silver,
+  .am-pricing--gold .am-pricing__icon {
+    animation: none !important;
+    transition: none !important;
+  }
+  .am-modal__panel,
+  .am-pricing__panel { transition: none; }
+}

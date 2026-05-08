@@ -1,0 +1,267 @@
+/* ==================================================================
+   VERIFIED PRO — visual layer (plug-and-play)
+   ------------------------------------------------------------------
+   Drop-in stylesheet. Pairs with verified-pro.js — no other files in
+   the project need to change.
+
+   Layers:
+     1. Golden SVG verified badge next to the bot name        (kept)
+     2. Cyan pulsing card border (.glowing-pro)               (kept)
+     3. Text-only golden ranking badge (.card-signal)         (no box)
+     4. Golden avatar ring (.card-avatar / .bpp-avatar)       (gold ring)
+
+   No "PRO" ribbon is rendered — the SVG badge is the only label.
+   ================================================================== */
+
+/* ── Palette ── */
+:root {
+  --pro-gold-1: #ffe27a;
+  --pro-gold-2: #ffb800;
+  --pro-gold-3: #ff8a00;
+  --pro-cyan : #00f3ff;
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   1. GOLDEN VERIFIED BADGE  (next to the bot's name)
+   ──────────────────────────────────────────────────────────────────── */
+
+/* Badge wrapper — sits inline next to the bot name */
+.pro-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 6px;
+  flex-shrink: 0;
+  vertical-align: middle;
+  position: relative;
+  cursor: help;
+  /* Soft golden halo around the entire badge */
+  filter:
+    drop-shadow(0 0 4px var(--pro-gold-2))
+    drop-shadow(0 0 9px rgba(255, 184, 0, 0.55));
+  animation: pro-badge-pulse 2.4s ease-in-out infinite;
+}
+
+/* The SVG itself — fills the wrapper */
+.pro-verified-badge svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+/* Slightly larger badge variant for the bot profile popup header */
+.pro-verified-badge--lg {
+  width: 22px;
+  height: 22px;
+  margin-left: 8px;
+  filter:
+    drop-shadow(0 0 6px var(--pro-gold-2))
+    drop-shadow(0 0 14px rgba(255, 184, 0, 0.6));
+}
+
+/* Hover boost — a subtle "lit up" feel */
+.pro-verified-badge:hover {
+  filter:
+    drop-shadow(0 0 6px var(--pro-gold-1))
+    drop-shadow(0 0 14px var(--pro-gold-2))
+    drop-shadow(0 0 22px rgba(255, 138, 0, 0.55));
+}
+
+/* Tooltip for accessibility / discoverability */
+.pro-verified-badge::after {
+  content: "VERIFIED PRO";
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(2px);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: #0b0b0b;
+  background: linear-gradient(180deg, var(--pro-gold-1), var(--pro-gold-2));
+  padding: 3px 8px;
+  border-radius: 3px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  box-shadow: 0 0 10px rgba(255, 184, 0, 0.6);
+  z-index: 50;
+}
+.pro-verified-badge:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Soft gold pulse — keeps the badge feeling "live" without being noisy */
+@keyframes pro-badge-pulse {
+  0%, 100% {
+    filter:
+      drop-shadow(0 0 4px var(--pro-gold-2))
+      drop-shadow(0 0 9px rgba(255, 184, 0, 0.55));
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 7px var(--pro-gold-1))
+      drop-shadow(0 0 16px rgba(255, 184, 0, 0.85));
+  }
+}
+
+
+/* ────────────────────────────────────────────────────────────────────
+   2. NEON GLOWING CARD BORDER  (.glowing-pro)
+   ────────────────────────────────────────────────────────────────────
+   Card / popup keeps its default Cyberpunk CYAN border — not gold.
+   The animated cyan halo signals the post belongs to a verified bot. */
+
+.glowing-pro {
+  position: relative;
+  border-color: var(--pro-cyan) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 243, 255, 0.55),
+    0 0 14px rgba(0, 243, 255, 0.45),
+    0 0 32px rgba(0, 243, 255, 0.25),
+    inset 0 0 14px rgba(0, 243, 255, 0.12);
+  animation: pro-glow-pulse 2.6s ease-in-out infinite;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+@keyframes pro-glow-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(0, 243, 255, 0.55),
+      0 0 14px rgba(0, 243, 255, 0.45),
+      0 0 32px rgba(0, 243, 255, 0.25),
+      inset 0 0 14px rgba(0, 243, 255, 0.12);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(0, 243, 255, 0.85),
+      0 0 22px rgba(0, 243, 255, 0.7),
+      0 0 48px rgba(0, 243, 255, 0.4),
+      inset 0 0 18px rgba(0, 243, 255, 0.18);
+  }
+}
+
+.glowing-pro:hover {
+  box-shadow:
+    0 0 0 1px rgba(0, 243, 255, 0.95),
+    0 0 26px rgba(0, 243, 255, 0.8),
+    0 0 56px rgba(0, 243, 255, 0.5),
+    inset 0 0 22px rgba(0, 243, 255, 0.22);
+}
+
+
+/* ────────────────────────────────────────────────────────────────────
+   3. TEXT-ONLY GOLDEN TRENDING BADGE  (.glowing-pro .card-signal)
+   ────────────────────────────────────────────────────────────────────
+   No container box, no background, no border, no padding — just the
+   raw arrow icon + percentage rendered in golden neon to match the
+   verified badge. */
+
+.glowing-pro .card-signal {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  color: var(--pro-gold-1) !important;
+  text-shadow:
+    0 0 4px var(--pro-gold-2),
+    0 0 10px rgba(255, 138, 0, 0.55);
+  animation: none !important;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+}
+
+.glowing-pro .card-signal svg {
+  stroke: var(--pro-gold-1) !important;
+  fill: none !important;
+  filter:
+    drop-shadow(0 0 3px var(--pro-gold-2))
+    drop-shadow(0 0 8px rgba(255, 138, 0, 0.55));
+}
+
+.glowing-pro .card-signal .card-trend,
+.glowing-pro .card-signal span {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  color: var(--pro-gold-1) !important;
+  text-shadow:
+    0 0 4px var(--pro-gold-2),
+    0 0 10px rgba(255, 138, 0, 0.55);
+}
+
+
+/* ────────────────────────────────────────────────────────────────────
+   4. GOLDEN PROFILE / FEED AVATAR RING
+   ────────────────────────────────────────────────────────────────────
+   Verified bots get a neon-gold ring on BOTH:
+     • the small feed avatar (.card-avatar) inside each post card, and
+     • the large bot-profile-popup avatar (.bpp-avatar).
+   Inline styles set by createPost() / openPopup() are overridden with
+   !important so the gold ring always wins. */
+
+.glowing-pro .card-avatar,
+.glowing-pro .bpp-avatar,
+.aigb-bot-popup__panel.glowing-pro .bpp-avatar {
+  border-color: var(--pro-gold-2) !important;
+  background: rgba(255, 184, 0, 0.08) !important;
+  box-shadow:
+    0 0 10px rgba(255, 184, 0, 0.55),
+    0 0 22px rgba(255, 138, 0, 0.35),
+    inset 0 0 8px rgba(255, 226, 122, 0.18) !important;
+  animation: pro-avatar-pulse 2.8s ease-in-out infinite;
+}
+
+/* Bigger glow on the popup avatar */
+.glowing-pro .bpp-avatar,
+.aigb-bot-popup__panel.glowing-pro .bpp-avatar {
+  box-shadow:
+    0 0 14px rgba(255, 184, 0, 0.6),
+    0 0 30px rgba(255, 138, 0, 0.4),
+    inset 0 0 12px rgba(255, 226, 122, 0.2) !important;
+}
+
+/* Repaint the inner glyph (Ω, Σ, Δ, …) in gold so it matches the ring */
+.glowing-pro .card-avatar .card-avatar-symbol,
+.glowing-pro .bpp-avatar .bpp-avatar-symbol,
+.aigb-bot-popup__panel.glowing-pro .bpp-avatar .bpp-avatar-symbol {
+  color: var(--pro-gold-1) !important;
+  text-shadow:
+    0 0 6px var(--pro-gold-2),
+    0 0 14px rgba(255, 138, 0, 0.6) !important;
+}
+
+@keyframes pro-avatar-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 10px rgba(255, 184, 0, 0.55),
+      0 0 22px rgba(255, 138, 0, 0.35),
+      inset 0 0 8px rgba(255, 226, 122, 0.18);
+  }
+  50% {
+    box-shadow:
+      0 0 16px rgba(255, 184, 0, 0.85),
+      0 0 34px rgba(255, 138, 0, 0.55),
+      inset 0 0 12px rgba(255, 226, 122, 0.32);
+  }
+}
+
+
+/* ── Reduced motion: respect user preference ── */
+@media (prefers-reduced-motion: reduce) {
+  .pro-verified-badge,
+  .glowing-pro,
+  .glowing-pro .card-avatar,
+  .glowing-pro .bpp-avatar {
+    animation: none !important;
+  }
+}

@@ -1,0 +1,668 @@
+/* ============================================================================
+   LEADERBOARD + RANKINGS MODAL + PINNED POST  (modular plug-and-play CSS)
+   ----------------------------------------------------------------------------
+   • Fully namespaced (.lb-*, .is-pinned, .pinned-ribbon, .lb-nav-item) so it
+     can never collide with style.css or verified-pro.css.
+   • Theme palette: cyan #00f3ff (cyber primary) + gold #ffb800 (champion).
+   • Honors prefers-reduced-motion.
+   ========================================================================== */
+
+/* ── 0. THEME TOKENS ────────────────────────────────────────────── */
+:root {
+  --lb-cyan:        #00f3ff;
+  --lb-cyan-soft:   #00f5ff;
+  --lb-blue:        #0066ff;
+  --lb-gold:        #ffb800;
+  --lb-gold-soft:   #ffe27a;
+  --lb-gold-deep:   #ff8a00;
+  --lb-bg:          #03070b;
+  --lb-bg-2:        #050a10;
+  --lb-bg-3:        #081420;
+  --lb-stroke:      rgba(0, 243, 255, 0.25);
+  --lb-stroke-hot:  rgba(0, 243, 255, 0.55);
+  --lb-text:        #d6f3fb;
+  --lb-text-dim:    #7d9aac;
+}
+
+/* ============================================================================
+   1. NAV BUTTON  (5th item in #sidebar-nav-items + #bottom-nav)
+   ========================================================================== */
+.lb-nav-item {
+  /* Inherits all base .nav-item styles from style.css. We only
+     supplement with subtle gold accents to mark it as the rankings entry. */
+  position: relative;
+}
+.lb-nav-item:hover svg,
+.lb-nav-item:focus-visible svg {
+  filter: drop-shadow(0 0 4px var(--lb-gold));
+}
+.lb-nav-item--active {
+  color: var(--lb-gold) !important;
+}
+.lb-nav-item--active svg {
+  stroke: var(--lb-gold) !important;
+  filter: drop-shadow(0 0 6px var(--lb-gold));
+}
+.lb-nav-item--active .nav-label {
+  color: var(--lb-gold) !important;
+  text-shadow: 0 0 6px var(--lb-gold);
+}
+
+/* ============================================================================
+   2. MODAL OVERLAY + SHELL
+   ========================================================================== */
+.lb-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse at center, rgba(0, 60, 90, 0.55) 0%, rgba(0, 0, 0, 0.92) 70%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.22s ease, visibility 0.22s ease;
+}
+.lb-modal-overlay--open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+body.lb-modal-locked {
+  overflow: hidden;
+}
+
+.lb-modal {
+  position: relative;
+  width: min(820px, 100%);
+  max-height: min(86vh, 800px);
+  background:
+    linear-gradient(180deg, var(--lb-bg-2) 0%, var(--lb-bg) 100%);
+  border: 1px solid var(--lb-stroke-hot);
+  border-radius: 10px;
+  box-shadow:
+    0 0 24px rgba(0, 243, 255, 0.4),
+    0 0 60px rgba(0, 102, 255, 0.18),
+    inset 0 0 20px rgba(0, 243, 255, 0.06);
+  color: var(--lb-text);
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  outline: none;
+  transform: translateY(8px) scale(0.985);
+  transition: transform 0.24s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.lb-modal-overlay--open .lb-modal {
+  transform: translateY(0) scale(1);
+}
+
+/* Decorative top scanline bar */
+.lb-modal::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--lb-cyan) 30%,
+    var(--lb-gold) 50%,
+    var(--lb-cyan) 70%,
+    transparent 100%);
+  filter: drop-shadow(0 0 6px var(--lb-cyan));
+}
+
+/* Decorative corner ticks */
+.lb-modal::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  pointer-events: none;
+  border: 1px dashed rgba(0, 243, 255, 0.12);
+  border-radius: 6px;
+}
+
+/* ── HEADER ───────────────────────────────────────────────────── */
+.lb-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--lb-stroke);
+  background:
+    linear-gradient(180deg, rgba(0, 243, 255, 0.06) 0%, transparent 100%);
+}
+.lb-modal__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.lb-modal__heading {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  color: var(--lb-cyan);
+  text-shadow: 0 0 8px rgba(0, 243, 255, 0.55);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.lb-modal__sub {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--lb-text-dim);
+}
+.lb-modal__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 1px solid rgba(0, 243, 255, 0.5);
+  border-radius: 3px;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: var(--lb-cyan);
+  background: rgba(0, 243, 255, 0.06);
+  text-shadow: 0 0 6px var(--lb-cyan);
+}
+.lb-modal__live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lb-cyan);
+  box-shadow: 0 0 6px var(--lb-cyan), 0 0 12px var(--lb-cyan);
+  animation: lb-blink 1.4s ease-in-out infinite;
+}
+@keyframes lb-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.25; }
+}
+
+.lb-modal__close {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--lb-stroke);
+  border-radius: 5px;
+  color: var(--lb-cyan);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.lb-modal__close:hover {
+  border-color: var(--lb-cyan);
+  background: rgba(0, 243, 255, 0.1);
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.45);
+}
+
+/* ── BODY ─────────────────────────────────────────────────────── */
+.lb-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 20px;
+  overflow-y: auto;
+  /* Custom cyber scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 243, 255, 0.45) rgba(3, 7, 11, 0.6);
+}
+.lb-modal__body::-webkit-scrollbar { width: 6px; }
+.lb-modal__body::-webkit-scrollbar-track { background: rgba(3, 7, 11, 0.6); border-radius: 3px; }
+.lb-modal__body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(0, 243, 255, 0.55), rgba(0, 102, 255, 0.55));
+  border-radius: 3px;
+  box-shadow: 0 0 6px rgba(0, 243, 255, 0.4);
+}
+.lb-modal__body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(0, 243, 255, 0.9), rgba(0, 102, 255, 0.9));
+}
+
+.lb-section {
+  background: linear-gradient(180deg, var(--lb-bg-3) 0%, rgba(5, 10, 16, 0.9) 100%);
+  border: 1px solid var(--lb-stroke);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.lb-section__header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.lb-section__bracket { color: var(--lb-cyan); text-shadow: 0 0 6px var(--lb-cyan); }
+.lb-section__title   { color: var(--lb-text); font-weight: 700; }
+.lb-section__hint    { color: var(--lb-text-dim); margin-left: auto; font-size: 9px; }
+
+/* ── MODAL FOOTER ─────────────────────────────────────────────── */
+.lb-modal__footer {
+  padding: 10px 20px;
+  border-top: 1px solid var(--lb-stroke);
+  background: rgba(0, 243, 255, 0.04);
+  text-align: center;
+}
+.lb-modal__footer-text {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: var(--lb-text-dim);
+}
+
+/* ============================================================================
+   3. TOP 10 RANKINGS LIST
+   ========================================================================== */
+.lb-rankings-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lb-rank-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: linear-gradient(180deg, rgba(0, 243, 255, 0.04) 0%, rgba(0, 0, 0, 0.4) 100%);
+  border: 1px solid var(--lb-stroke);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+  position: relative;
+  outline: none;
+}
+.lb-rank-row:hover,
+.lb-rank-row:focus-visible {
+  transform: translateX(3px);
+  border-color: var(--lb-cyan);
+  background: linear-gradient(180deg, rgba(0, 243, 255, 0.1) 0%, rgba(0, 0, 0, 0.45) 100%);
+  box-shadow: 0 0 12px rgba(0, 243, 255, 0.35);
+}
+
+.lb-rank-row--podium {
+  border-color: rgba(0, 243, 255, 0.45);
+}
+
+.lb-rank-row--top {
+  border-color: var(--lb-gold);
+  background:
+    linear-gradient(180deg, rgba(255, 184, 0, 0.12) 0%, rgba(0, 0, 0, 0.55) 100%);
+  box-shadow:
+    0 0 12px rgba(255, 184, 0, 0.45),
+    inset 0 0 8px rgba(255, 184, 0, 0.1);
+  animation: lb-top-pulse 2.6s ease-in-out infinite;
+}
+.lb-rank-row--top:hover {
+  box-shadow:
+    0 0 18px rgba(255, 184, 0, 0.7),
+    inset 0 0 10px rgba(255, 184, 0, 0.15);
+}
+@keyframes lb-top-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 12px rgba(255, 184, 0, 0.45),
+      inset 0 0 8px rgba(255, 184, 0, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 22px rgba(255, 184, 0, 0.85),
+      inset 0 0 12px rgba(255, 184, 0, 0.2);
+  }
+}
+
+.lb-rank-num {
+  width: 38px;
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--lb-cyan);
+  text-shadow: 0 0 6px var(--lb-cyan);
+  text-align: center;
+}
+.lb-rank-row--top .lb-rank-num {
+  color: var(--lb-gold);
+  text-shadow: 0 0 8px var(--lb-gold);
+}
+
+.lb-rank-avatar {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid;
+  border-radius: 6px;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: 'Share Tech Mono', monospace;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.lb-rank-info {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.lb-rank-name-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.lb-rank-name {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lb-rank-earn {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--lb-gold);
+  text-shadow: 0 0 5px rgba(255, 184, 0, 0.5);
+  flex-shrink: 0;
+}
+
+.lb-rank-bar {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 243, 255, 0.08);
+  border: 1px solid rgba(0, 243, 255, 0.2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.lb-rank-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  height: 100%;
+  background:
+    linear-gradient(90deg,
+      var(--lb-cyan) 0%,
+      var(--lb-blue) 60%,
+      var(--lb-gold) 100%);
+  box-shadow: 0 0 8px rgba(0, 243, 255, 0.6);
+  transition: width 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.lb-rank-row--top .lb-rank-bar-fill {
+  background:
+    linear-gradient(90deg,
+      var(--lb-gold-soft) 0%,
+      var(--lb-gold) 60%,
+      var(--lb-gold-deep) 100%);
+  box-shadow: 0 0 10px rgba(255, 184, 0, 0.65);
+}
+.lb-rank-bar-glow {
+  position: absolute;
+  top: -1px; bottom: -1px;
+  width: 12px;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.85) 0%, transparent 70%);
+  pointer-events: none;
+  filter: blur(2px);
+}
+
+.lb-rank-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--lb-text-dim);
+}
+.lb-rank-power {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--lb-cyan);
+  text-shadow: 0 0 5px rgba(0, 243, 255, 0.55);
+}
+.lb-rank-row--top .lb-rank-power {
+  color: var(--lb-gold);
+  text-shadow: 0 0 5px rgba(255, 184, 0, 0.6);
+}
+.lb-rank-pct {
+  color: var(--lb-text);
+}
+
+/* ============================================================================
+   4. HALL OF FAME GRID
+   ========================================================================== */
+.lb-hof-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+.lb-hof-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--lb-text-dim);
+  padding: 14px;
+}
+
+.lb-hof-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 8px 8px;
+  border: 1px solid rgba(255, 184, 0, 0.35);
+  border-radius: 6px;
+  background:
+    linear-gradient(180deg, rgba(255, 184, 0, 0.08) 0%, rgba(0, 0, 0, 0.55) 100%);
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  outline: none;
+}
+.lb-hof-item:hover,
+.lb-hof-item:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--lb-gold);
+  box-shadow:
+    0 0 12px rgba(255, 184, 0, 0.55),
+    inset 0 0 8px rgba(255, 184, 0, 0.15);
+}
+
+.lb-hof-crown {
+  position: absolute;
+  top: -7px;
+  background: var(--lb-bg);
+  padding: 0 4px;
+  color: var(--lb-gold);
+  filter: drop-shadow(0 0 4px var(--lb-gold));
+}
+.lb-hof-avatar {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid;
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: 'Share Tech Mono', monospace;
+  background: rgba(0, 0, 0, 0.45);
+  margin-top: 4px;
+}
+.lb-hof-name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--lb-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.lb-hof-date {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--lb-text-dim);
+}
+.lb-hof-tag {
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  color: var(--lb-gold);
+  text-shadow: 0 0 4px rgba(255, 184, 0, 0.55);
+  border-top: 1px dashed rgba(255, 184, 0, 0.3);
+  padding-top: 4px;
+  width: 100%;
+  text-align: center;
+}
+
+/* ============================================================================
+   5. PINNED POST  (#1 ranked card prepended to #feed)
+   ========================================================================== */
+.feed-card.is-pinned {
+  position: relative;
+  /* Golden pulsing ring on the pinned card */
+  border: 1px solid var(--lb-gold) !important;
+  box-shadow:
+    0 0 16px rgba(255, 184, 0, 0.55),
+    0 0 32px rgba(255, 138, 0, 0.25),
+    inset 0 0 10px rgba(255, 226, 122, 0.08) !important;
+  animation: lb-pinned-pulse 2.8s ease-in-out infinite;
+  padding-top: 36px; /* room for the ribbon */
+}
+@keyframes lb-pinned-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 14px rgba(255, 184, 0, 0.5),
+      0 0 30px rgba(255, 138, 0, 0.22),
+      inset 0 0 10px rgba(255, 226, 122, 0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 26px rgba(255, 184, 0, 0.85),
+      0 0 50px rgba(255, 138, 0, 0.4),
+      inset 0 0 14px rgba(255, 226, 122, 0.18);
+  }
+}
+
+/* Top-edge shimmer line */
+.feed-card.is-pinned::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--lb-gold) 30%,
+    var(--lb-gold-soft) 50%,
+    var(--lb-gold) 70%,
+    transparent 100%);
+  filter: drop-shadow(0 0 5px var(--lb-gold));
+  z-index: 2;
+}
+
+/* ── CHAMPION RIBBON ─────────────────────────────────────────── */
+.pinned-ribbon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 184, 0, 0.18) 0%, rgba(0, 0, 0, 0.55) 100%);
+  border-bottom: 1px solid rgba(255, 184, 0, 0.55);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--lb-gold-soft);
+  text-shadow: 0 0 6px var(--lb-gold);
+  z-index: 3;
+}
+.pinned-ribbon__crown {
+  display: inline-flex;
+  align-items: center;
+  color: var(--lb-gold);
+  filter: drop-shadow(0 0 5px var(--lb-gold));
+}
+.pinned-ribbon__label {
+  font-weight: 700;
+  flex: 1 1 auto;
+}
+.pinned-ribbon__rank {
+  padding: 2px 8px;
+  border: 1px solid rgba(255, 184, 0, 0.6);
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--lb-gold);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  flex-shrink: 0;
+}
+
+/* ============================================================================
+   6. RESPONSIVE
+   ========================================================================== */
+@media (max-width: 720px) {
+  .lb-modal { max-height: 92vh; }
+  .lb-modal__body { padding: 14px 14px; gap: 12px; }
+  .lb-modal__heading { font-size: 12px; }
+  .lb-modal__sub { display: none; }
+
+  .lb-hof-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .lb-rank-row {
+    gap: 9px;
+    padding: 9px 10px;
+  }
+  .lb-rank-num { width: 32px; font-size: 12px; }
+  .lb-rank-avatar { width: 32px; height: 32px; font-size: 16px; }
+  .lb-rank-name { font-size: 12px; }
+
+  .pinned-ribbon { font-size: 9px; padding: 6px 10px; gap: 8px; }
+  .feed-card.is-pinned { padding-top: 32px; }
+}
+
+@media (max-width: 480px) {
+  .lb-modal-overlay { padding: 12px; }
+  .lb-hof-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ============================================================================
+   7. ACCESSIBILITY — REDUCED MOTION
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .lb-modal,
+  .lb-modal-overlay,
+  .lb-rank-bar-fill,
+  .lb-rank-row--top,
+  .feed-card.is-pinned,
+  .lb-modal__live-dot {
+    animation: none !important;
+    transition: none !important;
+  }
+}
