@@ -692,12 +692,22 @@ const CONFIG = {
           '<div class="am-stats__chart" id="am-stat-chart" aria-label="Mock performance graph"></div>' +
         '</section>' +
 
-                /* CHARACTER PROMPT */
-        '<section class="am-modal__section">' +
-          '<div class="am-section-title"><span class="am-section-title__dot"></span>CHARACTER_PROMPT</div>' +
-          '<textarea class="am-prompt" id="am-modal-prompt" rows="4" placeholder="بوٹ کا اخلاق یا موڈ یہاں لکھیں..."></textarea>' +
-          '<button type="button" class="am-btn am-btn--save" id="am-save-prompt-btn" style="margin-top:8px; width:100%; background:#00f3ff; color:#000; font-weight:bold; border:none; padding:8px; cursor:pointer;">SAVE KERNEL</button>' +
-        '</section>' +
+                /* CHARACTER PROMPT Section — With Pencil (Edit) and Save functionality */
+'<section class="am-modal__section">' +
+  '<div class="am-section-title"><span class="am-section-title__dot"></span>CHARACTER_PROMPT (KERNEL)</div>' +
+  '<textarea class="am-prompt" id="am-modal-prompt" rows="4" readonly placeholder="No prompt configured..."></textarea>' +
+  '<div class="am-prompt-controls" style="display: flex; gap: 8px; margin-top: 8px;">' +
+    /* پینسل والا بٹن (Edit) */
+    '<button type="button" class="am-btn" id="am-edit-prompt-btn" style="flex: 1; background: #333; color: #fff; border: 1px solid #444;" title="Edit Prompt">' +
+      '✎ EDIT' +
+    '</button>' +
+    /* سیو والا بٹن */
+    '<button type="button" class="am-btn" id="am-save-prompt-btn" style="flex: 3; background: #00f3ff; color: #000; font-weight: bold; border: none; display: none;">' +
+      'SAVE KERNEL' +
+    '</button>' +
+  '</div>' +
+'</section>' +
+       
 
         /* RENAME ROW — 100% free, unlocked for all users / all plans */
         '<section class="am-modal__section">' +
@@ -1564,10 +1574,10 @@ const CONFIG = {
   };
 
      /* ────────────────────────────────────────────────────────────────────
-     RENAME & SAVE LOGIC (WITH FULL ANIMATIONS & FEEDBACK)
+     RENAME & SAVE LOGIC (WITH EDIT/LOCK SYSTEM)
      ──────────────────────────────────────────────────────────────────── */
 
-  /* ۱. نام بدلنے اور ڈپلیکیٹ چیک کرنے کا فنکشن (اینیمیشن کے ساتھ) */
+  /* ۱. نام بدلنے کا فنکشن (Duplicate Check اور Animation کے ساتھ) */
   function handleRenameAction() {
     var btn = document.getElementById('am-rename-btn');
     var input = document.getElementById('am-rename-input');
@@ -1577,7 +1587,6 @@ const CONFIG = {
 
     if (!newName || !agent) return;
 
-    // نام چیک کرنے کا لوجک: کیا یہ نام پہلے سے موجود ہے؟
     var isDuplicate = STATE.agents.some(function(a) {
       return a.name.toLowerCase() === newName.toLowerCase() && a.id !== agent.id;
     });
@@ -1585,71 +1594,78 @@ const CONFIG = {
     if (isDuplicate) {
       errorEl.textContent = "⚠️ یہ نام پہلے سے کسی اور بوٹ کا ہے!";
       errorEl.style.display = "block";
-      input.style.borderColor = "#ff4444"; // ان پٹ بارڈر لال ہو جائے گا
+      input.style.borderColor = "#ff4444";
       return;
     }
 
-    // اگر نام ٹھیک ہے تو سیو کریں اور اینیمیشن دکھائیں
     agent.name = newName;
-    saveBotsList(STATE.agents); // ڈیٹا میموری میں سیو کرنا
-    
-    document.getElementById('am-modal-title').textContent = newName; // ٹائٹل اپڈیٹ
+    saveBotsList(STATE.agents);
+    document.getElementById('am-modal-title').textContent = newName;
     errorEl.style.display = "none";
     input.style.borderColor = "#333";
 
-    // --- بصری اثرات (Animation) ---
     var originalText = btn.textContent;
     btn.textContent = "RENAMED! ✅";
-    btn.style.background = "#39ff14"; // سبز رنگ (کامیابی)
+    btn.style.background = "#39ff14";
     btn.style.boxShadow = "0 0 15px #39ff14";
-    btn.style.transform = "scale(0.95)";
 
     setTimeout(function() {
       btn.textContent = originalText;
-      btn.style.background = ""; // واپس پرانا اسٹائل
+      btn.style.background = "";
       btn.style.boxShadow = "";
-      btn.style.transform = "scale(1)";
     }, 2000);
 
-    window.AgentManager.decorateCards(); // باہر کے کارڈز اپڈیٹ کرنا
+    window.AgentManager.decorateCards();
   }
 
-  /* ۲. پرامپٹ (Kernel) سیو کرنے کا فنکشن (اینیمیشن کے ساتھ) */
+  /* ۲. پینسل (EDIT) بٹن دبانے پر خانہ ان لاک کرنا */
+  function handleEditPrompt() {
+    var area = document.getElementById('am-modal-prompt');
+    var editBtn = document.getElementById('am-edit-prompt-btn');
+    var saveBtn = document.getElementById('am-save-prompt-btn');
+
+    area.readOnly = false; // ٹائپنگ کے لیے کھول دیا
+    area.focus(); // کرسر اندر لے آئے
+    area.style.borderColor = "#00f3ff"; // خانہ نیلا ہو جائے گا
+    
+    editBtn.style.display = "none"; // پینسل والا بٹن چھپ گیا
+    saveBtn.style.display = "block"; // سیو والا بٹن نظر آگیا
+  }
+
+  /* ۳. سیو بٹن دبانے پر ڈیٹا محفوظ کرنا اور دوبارہ لاک کرنا */
   function handleSavePromptAction() {
-    var btn = document.getElementById('am-save-prompt-btn');
-    var promptText = document.getElementById('am-modal-prompt').value.trim();
+    var area = document.getElementById('am-modal-prompt');
+    var editBtn = document.getElementById('am-edit-prompt-btn');
+    var saveBtn = document.getElementById('am-save-prompt-btn');
     var agent = STATE.agents.find(function(a) { return a.id === STATE.activeAgentId; });
 
     if (agent) {
-      agent.prompt = promptText;
+      agent.prompt = area.value.trim();
       saveBotsList(STATE.agents); // ڈیٹا سیو ہو گیا
 
-      // --- بصری اثرات (Animation) ---
-      var originalText = btn.textContent;
-      btn.textContent = "SAVED! ✅";
-      btn.style.background = "#39ff14"; // سبز رنگ
-      btn.style.boxShadow = "0 0 20px #39ff14";
-      btn.style.transform = "scale(0.95)";
+      area.readOnly = true; // خانہ دوبارہ لاک کر دیا
+      area.style.borderColor = "transparent";
+      
+      // سیو بٹن کی اینیمیشن
+      saveBtn.textContent = "SAVED! ✅";
+      saveBtn.style.background = "#39ff14";
 
       setTimeout(function() {
-        btn.textContent = originalText;
-        btn.style.background = "#00f3ff"; // واپس وہی نیلا رنگ
-        btn.style.boxShadow = "none";
-        btn.style.transform = "scale(1)";
-      }, 2000);
+        saveBtn.textContent = "SAVE KERNEL";
+        saveBtn.style.background = "#00f3ff";
+        saveBtn.style.display = "none"; // سیو بٹن چھپ گیا
+        editBtn.style.display = "block"; // پینسل بٹن واپس آگیا
+      }, 1500);
     }
   }
 
-  /* ۳. بٹنز کو کلک کے ساتھ جوڑنا (Event Listeners) */
+  /* ۴. بٹنز کو کلک کے ساتھ جوڑنا (Event Listeners) */
   document.addEventListener('click', function(e) {
-    // ری نیم بٹن کا کلک
-    if (e.target.id === 'am-rename-btn') {
-      handleRenameAction();
-    }
-    // سیو کرنل بٹن کا کلک
-    if (e.target.id === 'am-save-prompt-btn') {
-      handleSavePromptAction();
-    }
+    if (e.target.id === 'am-rename-btn') handleRenameAction();
+    if (e.target.id === 'am-edit-prompt-btn') handleEditPrompt(); // پینسل بٹن
+    if (e.target.id === 'am-save-prompt-btn') handleSavePromptAction(); // سیو بٹن
   });
+       
+  
 
 })();
