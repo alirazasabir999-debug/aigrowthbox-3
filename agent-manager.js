@@ -153,15 +153,17 @@ const CONFIG = {
   /* ────────────────────────────────────────────────────────────────────
      SVG BADGES  ·  inline so they never depend on external assets
      ──────────────────────────────────────────────────────────────────── */
-
   /* ────────────────────────────────────────────────────────────────────
-     Professional SILVER Verified Badge (Same Exact Shape, Metallic Colors)
+     Professional SILVER Verified Badge (With Glow & Lock Icon)
      ──────────────────────────────────────────────────────────────────── */
   function svgSilverBadge(opts) {
     opts = opts || {};
     var s   = opts.size || 56;
     var uid = 'am-sv-' + Math.random().toString(36).slice(2, 8);
-    var cls = 'am-badge am-badge--silver' + (opts.locked ? ' am-badge--locked' : '');
+    
+    /* ہم نے جان بوجھ کر '--locked' کلاس ہٹا دی ہے تاکہ CSS اسے مدھم نہ کرے اور یہ چمکتا رہے */
+    var cls = 'am-badge am-badge--silver'; 
+    
     return '' +
       '<svg class="' + cls + '" width="' + s + '" height="' + s + '" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
         '<defs>' +
@@ -177,7 +179,16 @@ const CONFIG = {
             '<stop offset="60%"  stop-color="#c8d8e0" stop-opacity="0.55"/>' +
             '<stop offset="100%" stop-color="#7c97a8" stop-opacity="0"/>' +
           '</radialGradient>' +
+          /* NEW: Background Glow (چمک کے لیے نیا ریڈیل گریڈینٹ) */
+          '<radialGradient id="' + uid + '-glow" cx="50%" cy="50%" r="50%">' +
+            '<stop offset="0%"   stop-color="#c8d8e0" stop-opacity="0.55"/>' +
+            '<stop offset="100%" stop-color="#7c97a8" stop-opacity="0"/>' +
+          '</radialGradient>' +
         '</defs>' +
+        
+        /* بیج کے پیچھے چمکتی ہوئی روشنی (Background Glow) */
+        '<circle cx="12" cy="12" r="11" fill="url(#' + uid + '-glow)"/>' +
+        
         /* outer scalloped star — verified iconography */
         '<path d="M12 1.6 L14.2 5.5 L18.6 4.6 L18.2 9.1 L22.4 11 L19.6 14.5 L21.4 18.6 L17 19 L15.5 23.2 L12 20.6 L8.5 23.2 L7 19 L2.6 18.6 L4.4 14.5 L1.6 11 L5.8 9.1 L5.4 4.6 L9.8 5.5 Z" ' +
               'fill="url(#' + uid + '-grad)" stroke="#5d7385" stroke-width="0.7" stroke-linejoin="round"/>' +
@@ -185,8 +196,21 @@ const CONFIG = {
         '<circle cx="12" cy="11.4" r="6.2" fill="url(#' + uid + '-core)"/>' +
         /* clean white check on top */
         '<path d="M8.4 12.1 L10.9 14.6 L15.7 9.4" fill="none" stroke="#ffffff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>' +
+        
+        /* NEW: Lock Icon (صرف اس وقت نظر آئے گا جب بیج لاک ہو گا) */
+        (opts.locked ?
+          '<g transform="translate(13, 13)">' +
+            /* تالے کے پیچھے کالا دائرہ تاکہ تالا بالکل صاف اور الگ نظر آئے */
+            '<circle cx="5.5" cy="5.5" r="4.5" fill="#0a0c0f" stroke="#5d7385" stroke-width="0.5"/>' +
+            /* تالے کی باڈی (گولڈن کلر تاکہ کلاسی لگے) */
+            '<rect x="3.5" y="5.5" width="4" height="3" rx="0.5" fill="#ffb800"/>' +
+            /* تالے کا کنڈا (Shackle) */
+            '<path d="M4.5 5.5 V4 a1 1 0 0 1 2 0 V5.5" fill="none" stroke="#ffb800" stroke-width="1"/>' +
+          '</g>'
+        : '') +
       '</svg>';
   }
+   
    
   /* ────────────────────────────────────────────────────────────────────
      Professional GOLD Verified Badge (Exact Original SVG)
