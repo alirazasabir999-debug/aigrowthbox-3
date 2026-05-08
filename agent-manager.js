@@ -1022,7 +1022,7 @@ const CONFIG = {
   }
 
 
-    /* ────────────────────────────────────────────────────────────────────
+     /* ────────────────────────────────────────────────────────────────────
      OPEN / POPULATE / CLOSE
      ──────────────────────────────────────────────────────────────────── */
 
@@ -1091,11 +1091,18 @@ const CONFIG = {
     /* Performance graph */
     drawSparkline(m.querySelector('#am-stat-chart'), agent);
 
-    /* Prompt - FIXED: Always unlocked so you can type character behavior */
+    /* 🔴 PROMPT - اب یہ اوپن ہوتے ہی پکا لاک رہے گا 🔴 */
     var promptEl = m.querySelector('#am-modal-prompt');
     promptEl.value = agent.prompt || '';
-    promptEl.readOnly = false; // یہاں سے اب یہ ان لاک ہو گیا ہے
-    promptEl.style.pointerEvents = 'auto'; // کلک کو فعال کرنے کے لیے
+    promptEl.readOnly = true;             
+    promptEl.style.pointerEvents = 'none'; 
+    promptEl.style.background = 'transparent';
+    promptEl.style.borderColor = '#333';
+    
+    var editBtn = m.querySelector('#am-edit-prompt-btn');
+    var saveBtn = m.querySelector('#am-save-prompt-btn');
+    if(editBtn) editBtn.style.display = 'flex';
+    if(saveBtn) saveBtn.style.display = 'none';
 
     /* Rename row — always unlocked & enabled. Pre-fill the input with
        the bot's current designation so users can edit it in place. */
@@ -1118,6 +1125,7 @@ const CONFIG = {
     paintAvatarBadge(m, agent);
     paintBadgeState(m, agent);
   }
+   
    
 
 
