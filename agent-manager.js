@@ -156,6 +156,8 @@ const CONFIG = {
 
   /* Silver shield with checkmark — used dimmed in state 1, full color
      in state 2. `opts.size` (default 56), `opts.locked` (boolean). */
+    /* Professional Silver Star Badge — Metallic chrome gradient
+     Replaced the old hexagonal shield and lock overlay with a clean star crest. */
   function svgSilverBadge(opts) {
     opts = opts || {};
     var s   = opts.size || 56;
@@ -164,39 +166,34 @@ const CONFIG = {
     return '' +
       '<svg class="' + cls + '" width="' + s + '" height="' + s + '" viewBox="0 0 64 64" aria-hidden="true">' +
         '<defs>' +
+          /* Metallic Silver/Chrome Gradients */
           '<linearGradient id="' + uid + '-fill" x1="0" y1="0" x2="0" y2="1">' +
-            '<stop offset="0%"  stop-color="#f4f8fc"/>' +
-            '<stop offset="55%" stop-color="#c8d8e0"/>' +
+            '<stop offset="0%"   stop-color="#ffffff"/>' +
+            '<stop offset="45%"  stop-color="#c8d8e0"/>' +
             '<stop offset="100%" stop-color="#7c97a8"/>' +
           '</linearGradient>' +
           '<linearGradient id="' + uid + '-stroke" x1="0" y1="0" x2="0" y2="1">' +
-            '<stop offset="0%"  stop-color="#ffffff"/>' +
+            '<stop offset="0%"   stop-color="#ffffff"/>' +
             '<stop offset="100%" stop-color="#5d7385"/>' +
           '</linearGradient>' +
         '</defs>' +
-        /* Hexagonal shield */
-        '<path d="M32 3 L57 17 V47 L32 61 L7 47 V17 Z"' +
-          ' fill="url(#' + uid + '-fill)" stroke="url(#' + uid + '-stroke)" stroke-width="2" />' +
-        /* Inner ring */
-        '<path d="M32 11 L50 21 V43 L32 53 L14 43 V21 Z"' +
-          ' fill="none" stroke="#ffffff" stroke-width="0.8" stroke-opacity="0.55" />' +
-        /* Checkmark */
-        '<path d="M22 33 L29 40 L43 24"' +
-          ' fill="none" stroke="#0a1620" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />' +
-        '<path d="M22 33 L29 40 L43 24"' +
-          ' fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.85" />' +
-        /* Lock overlay (state 1 only) */
-        (opts.locked ?
-          '<g transform="translate(40 40)">' +
-            '<circle cx="0" cy="0" r="11" fill="#0a1620" stroke="#ffb800" stroke-width="1.5"/>' +
-            '<rect x="-5" y="-2" width="10" height="8" rx="1.5" fill="#ffb800"/>' +
-            '<path d="M-3 -2 V-5 a3 3 0 0 1 6 0 V-2" fill="none" stroke="#ffb800" stroke-width="1.5"/>' +
-          '</g>'
-        : '') +
+        /* Professional 5-Point Star Crest (Verified Style) */
+        '<path d="M32 2 L40.5 19.5 L59 22.5 L46 35.5 L49 54 L32 45 L15 54 L18 35.5 L5 22.5 L23.5 19.5 Z"' +
+          ' fill="url(#' + uid + '-fill)" stroke="url(#' + uid + '-stroke)" stroke-width="1.5" stroke-linejoin="round"/>' +
+        /* Inner Professional Halo */
+        '<circle cx="32" cy="30" r="14" fill="none" stroke="#ffffff" stroke-width="0.6" stroke-opacity="0.4" />' +
+        /* Professional Verification Checkmark */
+        '<path d="M23 32 L29 38 L41 24"' +
+          ' fill="none" stroke="#0a1620" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<path d="M23 32 L29 38 L41 24"' +
+          ' fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.85"/>' +
       '</svg>';
   }
+   
 
   /* Gold 5-point star with laurel hint + check — Verified Pro / max tier */
+    /* Professional Gold Star Badge — Deep 3D metallic gradient
+     Replaced the simple star body with a sharp, high-end 5-point star crest. */
   function svgGoldBadge(opts) {
     opts = opts || {};
     var s   = opts.size || 56;
@@ -205,34 +202,36 @@ const CONFIG = {
     return '' +
       '<svg class="' + cls + '" width="' + s + '" height="' + s + '" viewBox="0 0 64 64" aria-hidden="true">' +
         '<defs>' +
-          '<radialGradient id="' + uid + '-glow" cx="50%" cy="50%" r="50%">' +
-            '<stop offset="0%"  stop-color="#fff5d1" stop-opacity="0.7"/>' +
-            '<stop offset="100%" stop-color="#ffb800" stop-opacity="0"/>' +
-          '</radialGradient>' +
+          /* Premium Gold Metallic Gradients */
           '<linearGradient id="' + uid + '-fill" x1="0" y1="0" x2="0" y2="1">' +
-            '<stop offset="0%"  stop-color="#fff1b3"/>' +
-            '<stop offset="50%" stop-color="#ffb800"/>' +
+            '<stop offset="0%"   stop-color="#fff1b3"/>' +
+            '<stop offset="45%"  stop-color="#ffb800"/>' +
             '<stop offset="100%" stop-color="#a86b00"/>' +
           '</linearGradient>' +
           '<linearGradient id="' + uid + '-stroke" x1="0" y1="0" x2="0" y2="1">' +
-            '<stop offset="0%"  stop-color="#fff5d1"/>' +
+            '<stop offset="0%"   stop-color="#fff5d1"/>' +
             '<stop offset="100%" stop-color="#7c4c00"/>' +
           '</linearGradient>' +
+          '<radialGradient id="' + uid + '-glow" cx="50%" cy="50%" r="50%">' +
+            '<stop offset="0%"   stop-color="#fff5d1" stop-opacity="0.6"/>' +
+            '<stop offset="100%" stop-color="#ffb800" stop-opacity="0"/>' +
+          '</radialGradient>' +
         '</defs>' +
-        /* Soft outer halo */
+        /* Deep Outer Glow */
         '<circle cx="32" cy="32" r="30" fill="url(#' + uid + '-glow)"/>' +
-        /* Star body */
-        '<path d="M32 6 L39 24 L58 26 L43 39 L48 58 L32 48 L16 58 L21 39 L6 26 L25 24 Z"' +
-          ' fill="url(#' + uid + '-fill)" stroke="url(#' + uid + '-stroke)" stroke-width="1.6" stroke-linejoin="round"/>' +
-        /* Inner sheen */
-        '<path d="M32 12 L37 25 L51 27 L41 37 L44 50 L32 43 Z" fill="#ffffff" fill-opacity="0.18"/>' +
-        /* Center checkmark */
-        '<path d="M24 33 L30 39 L41 26"' +
-          ' fill="none" stroke="#3a2200" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '<path d="M24 33 L30 39 L41 26"' +
-          ' fill="none" stroke="#fff7d6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.85"/>' +
+        /* Professional 5-Point Star Crest (Verified Style) */
+        '<path d="M32 2 L40.5 19.5 L59 22.5 L46 35.5 L49 54 L32 45 L15 54 L18 35.5 L5 22.5 L23.5 19.5 Z"' +
+          ' fill="url(#' + uid + '-fill)" stroke="url(#' + uid + '-stroke)" stroke-width="1.8" stroke-linejoin="round"/>' +
+        /* Professional Internal Halo */
+        '<circle cx="32" cy="30" r="14" fill="none" stroke="#ffffff" stroke-width="0.7" stroke-opacity="0.3" />' +
+        /* Professional Verification Checkmark */
+        '<path d="M23 32 L29 38 L41 24"' +
+          ' fill="none" stroke="#3a2200" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<path d="M23 32 L29 38 L41 24"' +
+          ' fill="none" stroke="#fff7d6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>' +
       '</svg>';
   }
+   
 
 
   /* ────────────────────────────────────────────────────────────────────
