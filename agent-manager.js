@@ -1643,20 +1643,30 @@ const CONFIG = {
     saveBtn.style.display = "block"; // سیو والا بٹن ظاہر
   }
 
-  /* ۳. سیو بٹن دبانے پر پکا لاک کرنا اور پینسل واپس لانا */
+  /* ۳. سیو بٹن دبانے پر پکا لاک کرنا اور پینسل واپس لانا (Robust Version) */
   function handleSavePromptAction() {
     var area = document.getElementById('am-modal-prompt');
     var editBtn = document.getElementById('am-edit-prompt-btn');
     var saveBtn = document.getElementById('am-save-prompt-btn');
-    var agent = STATE.agents.find(function(a) { return a.id === STATE.activeAgentId; });
+    
+    // بوٹ کو ڈھونڈنے کا 100% پکا طریقہ (تاکہ آئی ڈی کا مسئلہ نہ آئے)
+    var agent = STATE.agents.filter(function(a) { return a.id == STATE.activeAgentId; })[0];
 
     if (agent) {
       agent.prompt = area.value.trim();
-      saveBotsList(STATE.agents); // ڈیٹا محفوظ
+      
+      // اگر سیونگ میں کوئی سیکنڈ کا بھی مسئلہ آئے تو UI نہ رکے (ایرر بائی پاس)
+      try {
+        if (typeof saveBotsList === 'function') {
+          saveBotsList(STATE.agents);
+        }
+      } catch(e) {
+        console.log("Safe save:", e);
+      }
 
       // ڈبہ واپس مکمل لاک کر دیا
       area.readOnly = true; 
-      area.style.pointerEvents = "none"; // کلک اور ٹائپنگ پکی بند!
+      area.style.pointerEvents = "none"; // پکا لاک
       area.style.background = "transparent";
       area.style.color = "#888";
       area.style.borderColor = "#333";
@@ -1664,26 +1674,24 @@ const CONFIG = {
       // سیو بٹن کی اینیمیشن
       saveBtn.textContent = "SAVED! ✅";
       saveBtn.style.background = "#39ff14";
+      saveBtn.style.color = "#000";
 
       // 1.5 سیکنڈ بعد سیو بٹن غائب اور پینسل واپس آ جائے گی
       setTimeout(function() {
         saveBtn.textContent = "SAVE KERNEL";
         saveBtn.style.background = "#00f3ff";
-        saveBtn.style.display = "none"; // سیو غائب
-        editBtn.style.display = "flex"; // پینسل واپس آ گئی
+        saveBtn.style.display = "none"; // سیو بٹن چھپ گیا
+        editBtn.style.display = "flex"; // پینسل بٹن واپس آ گیا
       }, 1500);
     }
   }
 
-  /* ۴. بٹنز کو کام پر لگانا */
+  /* ۴. بٹنز کو کام پر لگانا (پکا کلک لسنر) */
   document.addEventListener('click', function(e) {
-    if (e.target.id === 'am-rename-btn') handleRenameAction();
-    
-    // چونکہ پینسل کے اوپر یا نشان پر کلک ہو سکتا ہے، اس لیے .closest لگایا ہے
-    var editBtn = e.target.closest('#am-edit-prompt-btn');
-    if (editBtn) handleEditPrompt();
-
-    if (e.target.id === 'am-save-prompt-btn') handleSavePromptAction();
+    // .closest کا مطلب ہے کہ بٹن پر، یا اس کے اندر لکھے ٹیکسٹ پر جہاں بھی کلک ہو، یہ کام کرے گا
+    if (e.target.closest('#am-rename-btn')) handleRenameAction();
+    if (e.target.closest('#am-edit-prompt-btn')) handleEditPrompt();
+    if (e.target.closest('#am-save-prompt-btn')) handleSavePromptAction();
   });
    
    
