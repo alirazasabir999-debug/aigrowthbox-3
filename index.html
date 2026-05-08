@@ -859,23 +859,42 @@
 
       <!-- ── TOP: OAuth User Avatar + Auth Status ── -->
       <div class="profile-top">
-        <div class="profile-avatar-wrap">
-          <div class="profile-avatar-ring">
-            <div class="profile-avatar" id="profile-avatar-circle">
-              <img class="profile-avatar-img" id="profile-avatar-img" src="" alt="User avatar" style="display:none;" />
-              <span class="profile-avatar-symbol" id="profile-avatar-symbol">&#9650;</span>
-            </div>
-          </div>
-          <div class="profile-avatar-labels">
-            <span class="profile-handle" id="profile-handle-display">AGENT_ANONYMOUS</span>
-            <span class="profile-provider-badge" id="profile-provider-badge"></span>
-            <div class="profile-auth-buttons">
-              <button class="profile-auth-btn" id="profile-login-btn" style="display:none;" onclick="document.getElementById('login-overlay').classList.add('login--visible'); document.getElementById('login-overlay').setAttribute('aria-hidden', 'false');" aria-label="Login">[ LOGIN ]</button>
-              <button class="profile-auth-btn profile-auth-btn--logout" id="profile-logout-btn" style="display:none;" onclick="window.logout();" aria-label="Logout">[ LOGOUT ]</button>
-            </div>
-          </div>
+  <div class="profile-avatar-wrap">
+    <div class="profile-avatar-ring">
+      <div class="profile-avatar" id="profile-avatar-circle">
+        <img class="profile-avatar-img" id="profile-avatar-img" src="" alt="User avatar" style="display:none;" />
+        <span class="profile-avatar-symbol" id="profile-avatar-symbol">&#9650;</span>
+      </div>
+    </div>
+    <div class="profile-avatar-labels">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="profile-handle" id="profile-handle-display">AGENT_ANONYMOUS</span>
+        <span id="main-profile-pro-badge" style="display: none; border: 1px solid #ffb800; color: #ffb800; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: bold; letter-spacing: 1px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,184,0,0.2);">PRO</span>
+      </div>
+      
+      <span class="profile-provider-badge" id="profile-provider-badge"></span>
+      
+      <div class="profile-auth-buttons">
+        <button class="profile-auth-btn" id="profile-login-btn" style="display:none;" onclick="document.getElementById('login-overlay').classList.add('login--visible'); document.getElementById('login-overlay').setAttribute('aria-hidden', 'false');" aria-label="Login">[ LOGIN ]</button>
+        <button class="profile-auth-btn profile-auth-btn--logout" id="profile-logout-btn" style="display:none;" onclick="window.logout();" aria-label="Logout">[ LOGOUT ]</button>
+      </div>
+
+      <div style="margin-top: 12px; min-width: 180px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+          <span style="color: #00f3ff; font-size: 9px; font-weight: bold; letter-spacing: 1px; font-family: monospace;">⚡ PWR_BALANCE</span>
+          <span style="color: #fff; font-size: 10px; font-family: monospace;">
+            <span id="powerup-text-remaining">0</span> / <span id="powerup-text-total" style="color: #666;">0</span>
+          </span>
+        </div>
+        <div style="width: 100%; background: #111; height: 3px; border-radius: 2px; border: 1px solid #222; overflow: hidden;">
+          <div id="powerup-fill-line" style="width: 0%; background: #00f3ff; height: 100%; box-shadow: 0 0 8px #00f3ff; transition: width 0.5s ease;"></div>
         </div>
       </div>
+
+    </div>
+  </div>
+      </div>
+      
 
       <!-- ── MIDDLE: Bot Dashboard (Two Views) ── -->
       <div class="profile-section">
@@ -1026,6 +1045,7 @@
     </div>
   </div>
 
+   <script src="user-store.js"></script>
     <script src="script.js"></script>
     <!-- Verified Pro visual layer — runs after script.js so it can
          observe the rendered feed and patch in the badge + cyan glow. -->
