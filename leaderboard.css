@@ -539,18 +539,25 @@ body.lb-modal-locked {
 /* ============================================================================
    5. PINNED POST  (#1 ranked card prepended to #feed)
    ========================================================================== */
+
+/* یہ حصہ کارڈ کو ٹاپ پر پن کرنے کے لیے ہے */
 .feed-card.is-pinned {
   position: relative;
-  /* Golden pulsing ring on the pinned card */
-  border: 1px solid var(--lb-gold) !important;
+  padding-top: 36px; /* room for the ribbon */
+  margin-bottom: 20px;
+}
+
+/* ── 🏆 CHAMPION BORDER (صرف نمبر 1 کے لیے) ── */
+.champion-border {
+  border: 1.5px solid var(--lb-gold) !important;
   box-shadow:
     0 0 16px rgba(255, 184, 0, 0.55),
     0 0 32px rgba(255, 138, 0, 0.25),
     inset 0 0 10px rgba(255, 226, 122, 0.08) !important;
-  animation: lb-pinned-pulse 2.8s ease-in-out infinite;
-  padding-top: 36px; /* room for the ribbon */
+  animation: lb-champion-pulse 2.8s ease-in-out infinite;
 }
-@keyframes lb-pinned-pulse {
+
+@keyframes lb-champion-pulse {
   0%, 100% {
     box-shadow:
       0 0 14px rgba(255, 184, 0, 0.5),
@@ -565,23 +572,23 @@ body.lb-modal-locked {
   }
 }
 
-/* Top-edge shimmer line */
-.feed-card.is-pinned::before {
+/* کارڈ کے اوپری کنارے پر چمکتی ہوئی لائن (Shimmer) */
+.champion-border::before {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 2px;
+  height: 2.5px;
   background: linear-gradient(90deg,
     transparent 0%,
     var(--lb-gold) 30%,
     var(--lb-gold-soft) 50%,
     var(--lb-gold) 70%,
     transparent 100%);
-  filter: drop-shadow(0 0 5px var(--lb-gold));
+  filter: drop-shadow(0 0 6px var(--lb-gold));
   z-index: 2;
 }
 
-/* ── CHAMPION RIBBON ─────────────────────────────────────────── */
+/* ── CHAMPION RIBBON (گولڈن ریبن) ─────────────────────────── */
 .pinned-ribbon {
   position: absolute;
   top: 0;
@@ -592,35 +599,16 @@ body.lb-modal-locked {
   gap: 10px;
   padding: 7px 14px;
   background:
-    linear-gradient(180deg, rgba(255, 184, 0, 0.18) 0%, rgba(0, 0, 0, 0.55) 100%);
-  border-bottom: 1px solid rgba(255, 184, 0, 0.55);
+    linear-gradient(180deg, rgba(255, 184, 0, 0.22) 0%, rgba(0, 0, 0, 0.7) 100%);
+  border-bottom: 1px solid rgba(255, 184, 0, 0.6);
   font-family: 'Share Tech Mono', monospace;
   font-size: 10px;
   letter-spacing: 0.22em;
   color: var(--lb-gold-soft);
-  text-shadow: 0 0 6px var(--lb-gold);
+  text-shadow: 0 0 8px var(--lb-gold);
   z-index: 3;
 }
-.pinned-ribbon__crown {
-  display: inline-flex;
-  align-items: center;
-  color: var(--lb-gold);
-  filter: drop-shadow(0 0 5px var(--lb-gold));
-}
-.pinned-ribbon__label {
-  font-weight: 700;
-  flex: 1 1 auto;
-}
-.pinned-ribbon__rank {
-  padding: 2px 8px;
-  border: 1px solid rgba(255, 184, 0, 0.6);
-  border-radius: 3px;
-  background: rgba(0, 0, 0, 0.55);
-  color: var(--lb-gold);
-  font-size: 9px;
-  letter-spacing: 0.2em;
-  flex-shrink: 0;
-}
+
 
 /* ============================================================================
    6. RESPONSIVE
