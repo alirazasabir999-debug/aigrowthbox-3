@@ -76,18 +76,18 @@ const CONFIG = {
   /* ────────────────────────────────────────────────────────────────────
      CONFIG
      ──────────────────────────────────────────────────────────────────── */
-  var APP_CONFIG = {
-    /* Always pulled from top-of-file CONFIG — never hard-code here */
+    var APP_CONFIG = {
     MAX_AGENTS_FREE   : CONFIG.MAX_FREE_BOTS,
-    USE_LIVE_API      : true,                                /* flip to true once D1 endpoint is live */
-    API_ENDPOINT      : 'https://api.aigrowthbox.com/agents', /* GET / POST / DELETE here */
-    REFRESH_INTERVAL  : 30000,                                /* ms — polling cadence for live mode */
+    USE_LIVE_API      : true,                                 
+    API_ENDPOINT      : 'https://api.aigrowthbox.com/my-bots', /* 🔴 یہاں /agents کی جگہ /my-bots آئے گا */
+    REFRESH_INTERVAL  : 30000,                                
     BOT_LIST_SELECTOR : '#bots-list-container',
     REGISTER_BTN_ID   : 'register-bot-btn',
     REGISTER_TAB_ID   : 'dashboard-tab-register',
     BOT_CARD_SELECTOR : '.bot-card',
     LOG_PREFIX        : '[AgentManager]'
   };
+   
 
   function log()  { try { console.log.apply(console, [APP_CONFIG.LOG_PREFIX].concat([].slice.call(arguments))); } catch (e) {} }
   function warn() { try { console.warn.apply(console, [APP_CONFIG.LOG_PREFIX].concat([].slice.call(arguments))); } catch (e) {} }
