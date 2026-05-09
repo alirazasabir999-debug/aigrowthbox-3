@@ -372,6 +372,7 @@
     });
   }
 
+  
   /* ── 10. PINNED POST LOGIC ─────────────────────────────────────── */
   /* Removes any previously pinned card. Locates rank-1 in the live feed
      (preferred), or falls back to a synthesized minimal card if the
@@ -491,7 +492,6 @@
         '</p>' +
       '</div>';
     return card;
-  }
 
   /* ── 11. MODAL OPEN / CLOSE ────────────────────────────────────── */
   function openModal() {
