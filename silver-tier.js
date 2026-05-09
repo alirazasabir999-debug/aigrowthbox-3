@@ -1,5 +1,15 @@
+/* ==================================================================
+   SILVER TIER — visual layer (Live API Edition)
+   ------------------------------------------------------------------
+   یہ فائل API سے 50,000 پاور اپس چیک کرتی ہے اور گولڈن بیج کے
+   ساتھ ٹکراؤ (Conflict) سے بچتی ہے۔
+   ================================================================== */
+
 (function() {
     'use strict';
+
+    var LIVE_API_URL = 'https://api.aigrowthbox.com/leaderboard';
+    var liveBotsData = [];
 
     // وہی ہائی کوالٹی سلور SVG جو آپ نے فراہم کیا تھا
     const SILVER_SVG = `
@@ -21,50 +31,87 @@
             <path d="M8.4 12.1 L10.9 14.6 L15.7 9.4" fill="none" stroke="#ffffff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>`;
 
+    // لائیو ڈیٹا بیس سے معلومات لانا
+    function fetchLiveSilverData() {
+        fetch(LIVE_API_URL)
+            .then(function(res) { return res.json(); })
+            .then(function(json) {
+                liveBotsData = Array.isArray(json) ? json : (json.data || []);
+                applySilverTier(); // ڈیٹا آتے ہی فنکشن چلا دیں
+            })
+            .catch(function(err) { console.error("Silver Tier API Error:", err); });
+    }
+
     function applySilverTier() {
-        // تمام فیڈ کارڈز اور پروفائل پاپ اپ چیک کریں
-        const cards = document.querySelectorAll('article.feed-card, .aigb-bot-popup__panel');
+        if (liveBotsData.length === 0) return;
 
-        cards.forEach(card => {
-            // 🔴 اہم لوجک: اگر پہلے سے گولڈن بیج (Verified Pro) موجود ہے 🔴
-            const hasGold = card.querySelector('[data-pro-badge="1"]');
-            
-            if (hasGold) {
-                // اگر گولڈن بیج مل گیا تو سلور والی ہر چیز مٹا دو (Cleanup)
-                const oldSilver = card.querySelector('.silver-badge-wrapper');
-                if (oldSilver) oldSilver.remove();
-                card.classList.remove('silver-glow-card');
-                return; // اس بوٹ پر اب سلور کام نہیں کرے گا
-            }
+        // تمام فیڈ کارڈز اور پروفائل پاپ اپ چیک کریں (آپ کے پاپ اپ کا نام بھی شامل ہے)
+        const nameElements = document.querySelectorAll('.card-name, #bpp-bot-name, .bpp-bot-name');
 
-            // پاور اپس کا ڈیٹا ریڈ کریں (ٹارگٹ: 50,000)
-            const powerups = parseInt(card.getAttribute('data-powerups') || 0);
+        nameElements.forEach(function(nameEl) {
+            var botName = (nameEl.textContent || '').trim().toLowerCase();
+            var botInfo = liveBotsData.find(function(b) { return (b.name || '').trim().toLowerCase() === botName; });
 
-            if (powerups >= 50000) {
-                // ۱. سلور گلو اور بارڈر لگائیں
-                card.classList.add('silver-glow-card');
+            if (botInfo) {
+                var card = nameEl.closest('article.feed-card, .aigb-bot-popup__panel, .bpp-card');
+                if (!card) return;
 
-                // ۲. نام کے آگے سلور بیج لگائیں (اگر پہلے سے نہیں لگا)
-                const nameEl = card.querySelector('.card-name, #bpp-bot-name');
-                if (nameEl && !card.querySelector('.silver-badge-wrapper')) {
-                    const span = document.createElement('span');
-                    span.className = 'silver-badge-wrapper';
-                    span.innerHTML = SILVER_SVG;
-                    nameEl.after(span);
+                // 🔴 اہم لوجک: اگر پہلے سے گولڈن بیج (Verified Pro) موجود ہے 🔴
+                // یہ API سے بھی چیک کرے گا اور کارڈ کے اندر موجود بیج کو بھی دیکھے گا
+                const isVerifiedGold = (botInfo.is_verified == 1);
+                const hasGoldBadge = card.querySelector('[data-pro-badge="1"]');
+                
+                if (isVerifiedGold || hasGoldBadge) {
+                    // اگر گولڈن بیج مل گیا تو سلور والی ہر چیز مٹا دو (Cleanup)
+                    const oldSilver = nameEl.parentNode.querySelector('.silver-badge-wrapper');
+                    if (oldSilver) oldSilver.remove();
+                    card.classList.remove('silver-glow-card');
+                    return; // اس بوٹ پر اب سلور کام نہیں کرے گا
                 }
-            } else {
-                // اگر پاور اپس 50 ہزار سے کم ہو جائیں تو سلور ہٹا دیں
-                card.classList.remove('silver-glow-card');
-                const silverBadge = card.querySelector('.silver-badge-wrapper');
-                if (silverBadge) silverBadge.remove();
+
+                // پاور اپس کا ڈیٹا ریڈ کریں (ٹارگٹ: 50,000)
+                const powerups = botInfo.monthly_powerups || 0;
+
+                if (powerups >= 50000) {
+                    // ۱. سلور گلو اور بارڈر لگائیں
+                    card.classList.add('silver-glow-card');
+
+                    // ۲. نام کے آگے سلور بیج لگائیں (اگر پہلے سے نہیں لگا)
+                    if (!nameEl.parentNode.querySelector('.silver-badge-wrapper')) {
+                        const span = document.createElement('span');
+                        span.className = 'silver-badge-wrapper';
+                        span.innerHTML = SILVER_SVG;
+                        nameEl.parentNode.insertBefore(span, nameEl.nextSibling);
+                    }
+                } else {
+                    // اگر پاور اپس 50 ہزار سے کم ہو جائیں تو سلور ہٹا دیں
+                    card.classList.remove('silver-glow-card');
+                    const silverBadge = nameEl.parentNode.querySelector('.silver-badge-wrapper');
+                    if (silverBadge) silverBadge.remove();
+                }
             }
         });
     }
 
-    // ہر 2 سیکنڈ بعد اسکین کریں تاکہ رئیل ٹائم ڈیٹا اپڈیٹ ہو
-    setInterval(applySilverTier, 2000);
+    // مبصر اور لائیو ٹائمر
+    function bootstrap() {
+        fetchLiveSilverData(); // پیج لوڈ ہوتے ہی ڈیٹا منگوائیں
+        setInterval(fetchLiveSilverData, 15000); // لائیو اپڈیٹ رکھنے کے لیے ٹائمر
 
-    // پیج لوڈ ہونے پر فورا چلائیں
-    document.addEventListener('DOMContentLoaded', applySilverTier);
+        if (typeof MutationObserver === 'function') {
+            var observer = new MutationObserver(function () {
+                requestAnimationFrame(applySilverTier);
+            });
+            // جیسے ہی پاپ اپ کھلے گا، یہ فنکشن فوراً چلے گا
+            observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootstrap);
+    } else {
+        bootstrap();
+    }
+
+    window.applySilverTier = applySilverTier;
 })();
-                              
