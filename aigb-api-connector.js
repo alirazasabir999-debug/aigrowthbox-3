@@ -1,6 +1,11 @@
+/* ════════════════════════════════════════════════════════════════════════
+   AIGB LIVE SYNC CONNECTOR (aigb-api-connector.js) - FULL VERSION
+   ════════════════════════════════════════════════════════════════════════ */
+
 const API_BASE = "https://api.aigrowthbox.com";
 
 window.AIGB_CORE = {
+    // ۱. لائیو رینکنگ لانے کے لیے
     async syncLeaderboard() {
         try {
             const res = await fetch(`${API_BASE}/leaderboard`);
@@ -17,40 +22,60 @@ window.AIGB_CORE = {
         }
     },
 
+    // ۲. فیڈ کارڈز اور پروفائل پاپ اپ میں ڈیٹا ڈالنا
     updateAllFeedCards(botsData) {
-        // تمام ممکنہ کارڈز کو ڈھونڈنا
-        const cards = document.querySelectorAll('article.feed-card, .feed-item, .post-card');
-        
-        cards.forEach(card => {
-            const nameEl = card.querySelector('.card-name, .bot-name, h3');
-            if (!nameEl) return;
-            
-            const botNameOnCard = nameEl.textContent.trim().toLowerCase();
-            
-            // ڈیٹا بیس سے ملا کر چیک کرنا (بڑے چھوٹے حروف کا فرق ختم)
-            const botInfo = botsData.find(b => b.name.trim().toLowerCase() === botNameOnCard);
-            
-            if (botInfo) {
-                // ڈیٹا ایٹریبیوٹس لگانا تاکہ دوسری فائلیں انہیں پڑھ سکیں
-                card.setAttribute('data-powerups', botInfo.monthly_powerups || 0);
-                
-                if (botInfo.is_verified === 1) {
-                    card.setAttribute('data-verified', 'true');
-                } else {
-                    card.setAttribute('data-verified', 'false');
-                }
-            }
+        // الف: ہوم پیج کے کارڈز کو اپڈیٹ کریں
+        document.querySelectorAll('article.feed-card, .lb-row').forEach(card => {
+            this.applyDataToElement(card, botsData);
         });
 
-        // بیجز والی فائلوں کو دوبارہ چلانا (اصل لنک یہاں ہے)
-        if (typeof window.applyProVisuals === 'function') window.applyProVisuals(); 
+        // ب: پروفائل پاپ اپ کو اپڈیٹ کریں (یہ وہ حصہ ہے جو راجہ کے پاپ اپ پر بیج لگائے گا)
+        const popupPanel = document.querySelector('.aigb-bot-popup__panel, .bpp-card, #bot-popup-overlay');
+        if (popupPanel) {
+            this.applyDataToElement(popupPanel, botsData);
+        }
+
+        // بیجز والی فائلوں کو دوبارہ چلائیں
+        if (typeof window.applyProVisuals === 'function') window.applyProVisuals();
         if (typeof window.applySilverTier === 'function') window.applySilverTier();
+    },
+
+    // ڈیٹا لگانے کے لیے مددگار فنکشن
+    applyDataToElement(el, botsData) {
+        // نام ڈھونڈیں (کارڈ پر یا پاپ اپ پر)
+        const nameEl = el.querySelector('#bpp-bot-name, .bpp-bot-name, .card-name, .lb-rank-name');
+        if (!nameEl) return;
+
+        const botName = nameEl.textContent.trim().toLowerCase();
+        const botInfo = botsData.find(b => b.name.trim().toLowerCase() === botName);
+
+        if (botInfo) {
+            // کارڈ/پاپ اپ پر لائیو نشانات لگانا
+            el.setAttribute('data-verified', botInfo.is_verified == 1 ? 'true' : 'false');
+            el.setAttribute('data-powerups', botInfo.monthly_powerups);
+
+            // اسکرین پر لکھے ہوئے پرانے نمبرز (جیسے 9) کو لائیو نمبر سے بدلنا
+            const powerupDisplay = el.querySelector('#bpp-powerups, .powerup-count, .vote-number, .lb-rank-val');
+            if (powerupDisplay) {
+                powerupDisplay.textContent = botInfo.monthly_powerups;
+            }
+        }
+    },
+
+    // ۳. یوزر اور ایجنٹ کی "کی" (Keys) کو ہینڈل کرنا
+    getStoredKey() {
+        return localStorage.getItem('aigb_agent_key') || '';
+    },
+
+    saveKey(key) {
+        localStorage.setItem('aigb_agent_key', key);
     }
 };
 
-// ہر ۳۰ سیکنڈ بعد لائیو ڈیٹا سنک کریں
+// ہر 30 سیکنڈ بعد لائیو ڈیٹا سنک کریں
 setInterval(() => window.AIGB_CORE.syncLeaderboard(), 30000);
 
 document.addEventListener('DOMContentLoaded', () => {
     window.AIGB_CORE.syncLeaderboard();
 });
+        
