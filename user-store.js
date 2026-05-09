@@ -1,25 +1,22 @@
 /* ════════════════════════════════════════════════════════════════════
-   USER STORE & MARKETPLACE LOGIC (100% FOOLPROOF FIX)
+   USER STORE & MARKETPLACE LOGIC (TESTING MODE FIX)
    ════════════════════════════════════════════════════════════════════ */
 
-// LocalStorage سے یوزر کا پلان چیک کریں تاکہ ریفریش پر غائب نہ ہو
-var savedPlan = localStorage.getItem('am_user_plan') || 'basic';
-
+// ہم نے براؤزر کی میموری ہٹا دی ہے، اب آپ جب بھی ریفریش کریں گے، یہ 'basic' سے شروع ہوگا تاکہ آپ بار بار ٹیسٹ کر سکیں!
 var USER_MARKET_STATE = {
-    plan: savedPlan,
+    plan: 'basic', 
     totalPowerUps: 5000,
     usedPowerUps: 1550
 };
 
 var userStoreModalEl = null;
 
-// SVG Icons (ان کو ہم نے باہر نکال دیا ہے تاکہ ہر فنکشن ان کو پڑھ سکے)
+// SVG Icons
 const svgCrown = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
 const svgLightning = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>';
 const svgCart = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>';
 const svgPlay = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>';
 
-// 1. ماڈل بنانے کا فنکشن
 function buildUserStoreModal() {
   if (userStoreModalEl) return userStoreModalEl;
 
@@ -59,6 +56,7 @@ function buildUserStoreModal() {
   document.getElementById('us-close-btn').onclick = window.closeUserStoreModal;
   document.getElementById('us-close-bg').onclick = window.closeUserStoreModal;
   
+  // پرو خریدنے والا کلک
   document.getElementById('us-buy-pro-btn').onclick = function() {
       window.activateUserProfilePro();
       window.closeUserStoreModal();
@@ -68,7 +66,6 @@ function buildUserStoreModal() {
   return userStoreModalEl;
 }
 
-// 🔴 ہم نے ان فنکشنز کو 'window.' لگا کر گلوبل کر دیا ہے تاکہ بٹن ان کو ڈھونڈ سکیں 🔴
 window.openUserStoreModal = function() {
   var m = buildUserStoreModal();
   var adBtn = document.getElementById('us-watch-ad-btn');
@@ -92,16 +89,15 @@ window.closeUserStoreModal = function() {
 };
 
 window.activateUserProfilePro = function() {
-    USER_MARKET_STATE.plan = 'pro';
-    localStorage.setItem('am_user_plan', 'pro'); // میموری میں سیو
+    USER_MARKET_STATE.plan = 'pro'; // پلان پرو کر دیا
     
+    // بیج دکھاؤ، بٹن غائب کرو
     var proBadge = document.getElementById('main-profile-pro-badge');
-    if (proBadge) proBadge.style.display = 'inline-block'; // بیج دکھاؤ
+    if (proBadge) proBadge.style.display = 'inline-block';
     
     var upBtn = document.getElementById('main-upgrade-btn');
-    if (upBtn) upBtn.style.display = 'none'; // اپگریڈ بٹن ہٹاؤ
+    if (upBtn) upBtn.style.display = 'none';
 
-    // بوٹ والے بینر کو بھی بتا دو کہ ہم پرو ہو گئے ہیں!
     if (typeof window.AgentManager !== 'undefined' && typeof window.AgentManager.setUserPlan === 'function') {
         window.AgentManager.setUserPlan('pro');
     }
@@ -121,38 +117,35 @@ window.updateUserPowerUpTracker = function() {
     if (textTotal) textTotal.textContent = " / " + USER_MARKET_STATE.totalPowerUps.toLocaleString();
 };
 
-/* 🔴 100% پکا لاگ ان چیکر 🔴
-   نام دیکھنے کے بجائے، ہم دیکھیں گے کہ کیا "لاگ آؤٹ بٹن" غائب ہے؟ 
-   اگر لاگ آؤٹ بٹن غائب ہے، مطلب یوزر لاگ آؤٹ ہے، تو سب پریمیم فیچر چھپا دو۔ */
+/* 🔴 سمارٹ لاگ ان چیکر 🔴 */
 setInterval(function() {
     var logoutBtn = document.getElementById('profile-logout-btn');
     var premiumSection = document.getElementById('premium-features-section');
     var proBadge = document.getElementById('main-profile-pro-badge');
+    var upBtn = document.getElementById('main-upgrade-btn');
     
     if (premiumSection && logoutBtn) {
-        // اگر لاگ آؤٹ بٹن چھپا ہوا ہے...
+        // لاگ آؤٹ کی حالت
         if (logoutBtn.style.display === 'none' || logoutBtn.style.display === '') {
-            premiumSection.style.display = 'none'; // اپگریڈ اور ٹریکر چھپا دو
-            if (proBadge) proBadge.style.display = 'none'; // PRO بیج بھی چھپا دو
+            premiumSection.style.display = 'none'; 
+            if (proBadge) proBadge.style.display = 'none'; 
         } else {
-            // یوزر لاگ ان ہے!
+            // لاگ ان کی حالت
             premiumSection.style.display = 'block'; 
             
-            // اگر یوزر نے پرو خریدا ہوا ہے، تو اپگریڈ بٹن غائب کر کے بیج لگا دو
-            if (localStorage.getItem('am_user_plan') === 'pro') {
-                var upBtn = document.getElementById('main-upgrade-btn');
-                if (upBtn) upBtn.style.display = 'none';
-                if (proBadge) proBadge.style.display = 'inline-block';
+            // یہاں ہم چیک کر رہے ہیں کہ یوزر پرو ہے یا نہیں؟
+            if (USER_MARKET_STATE.plan === 'pro') {
+                if (upBtn) upBtn.style.display = 'none'; // اپگریڈ بٹن غائب
+                if (proBadge) proBadge.style.display = 'inline-block'; // PRO بیج حاضر
+            } else {
+                if (upBtn) upBtn.style.display = 'inline-block'; // اپگریڈ بٹن حاضر
+                if (proBadge) proBadge.style.display = 'none'; // PRO بیج غائب
             }
         }
     }
 }, 500);
 
-// جب پیج لوڈ ہو تو میموری چیک کرے
 document.addEventListener('DOMContentLoaded', function() {
-    if (localStorage.getItem('am_user_plan') === 'pro') {
-        window.activateUserProfilePro();
-    }
     window.updateUserPowerUpTracker();
 });
-       
+        
