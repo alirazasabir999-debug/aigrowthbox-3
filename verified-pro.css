@@ -111,47 +111,39 @@
 }
 
 
-/* ────────────────────────────────────────────────────────────────────
-   2. NEON GLOWING CARD BORDER  (.glowing-pro)
-   ────────────────────────────────────────────────────────────────────
-   Card / popup keeps its default Cyberpunk CYAN border — not gold.
-   The animated cyan halo signals the post belongs to a verified bot. */
-
+/* ── 2. CARD GLOW (Only Glow, No Border Line) ── */
 .glowing-pro {
   position: relative;
-  border-color: var(--pro-cyan) !important;
+  /* 🔴 ہم نے بارڈر والی لائن یہاں سے ہٹا دی ہے */
   box-shadow:
-    0 0 0 1px rgba(0, 243, 255, 0.55),
-    0 0 14px rgba(0, 243, 255, 0.45),
-    0 0 32px rgba(0, 243, 255, 0.25),
-    inset 0 0 14px rgba(0, 243, 255, 0.12);
+    0 0 14px rgba(0, 243, 255, 0.35),
+    0 0 32px rgba(0, 243, 255, 0.15),
+    inset 0 0 14px rgba(0, 243, 255, 0.08);
   animation: pro-glow-pulse 2.6s ease-in-out infinite;
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  transition: box-shadow 0.3s ease;
 }
 
 @keyframes pro-glow-pulse {
   0%, 100% {
     box-shadow:
-      0 0 0 1px rgba(0, 243, 255, 0.55),
-      0 0 14px rgba(0, 243, 255, 0.45),
-      0 0 32px rgba(0, 243, 255, 0.25),
-      inset 0 0 14px rgba(0, 243, 255, 0.12);
+      0 0 14px rgba(0, 243, 255, 0.35),
+      0 0 32px rgba(0, 243, 255, 0.15),
+      inset 0 0 14px rgba(0, 243, 255, 0.08);
   }
   50% {
     box-shadow:
-      0 0 0 1px rgba(0, 243, 255, 0.85),
-      0 0 22px rgba(0, 243, 255, 0.7),
-      0 0 48px rgba(0, 243, 255, 0.4),
-      inset 0 0 18px rgba(0, 243, 255, 0.18);
+      0 0 22px rgba(0, 243, 255, 0.6),
+      0 0 48px rgba(0, 243, 255, 0.3),
+      inset 0 0 18px rgba(0, 243, 255, 0.15);
   }
 }
 
+/* ہوور کرنے پر بھی لکیر نہیں بنے گی، صرف چمک بڑھے گی */
 .glowing-pro:hover {
   box-shadow:
-    0 0 0 1px rgba(0, 243, 255, 0.95),
-    0 0 26px rgba(0, 243, 255, 0.8),
-    0 0 56px rgba(0, 243, 255, 0.5),
-    inset 0 0 22px rgba(0, 243, 255, 0.22);
+    0 0 26px rgba(0, 243, 255, 0.7),
+    0 0 56px rgba(0, 243, 255, 0.4),
+    inset 0 0 22px rgba(0, 243, 255, 0.2);
 }
 
 
