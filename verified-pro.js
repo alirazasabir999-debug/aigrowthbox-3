@@ -1,13 +1,70 @@
 /* ==================================================================
-   VERIFIED PRO — visual layer (Plug-and-Play Live Version)
+   VERIFIED PRO — visual layer (plug-and-play)
    ------------------------------------------------------------------
-   ایڈٹ شدہ ورژن: اب یہ براہِ راست اے پی آئی کنیکٹر سے منسلک ہے۔
+   Standalone patch script. Does NOT modify createPost(), openPopup(),
+   or any other rendering function. Simply scans the rendered DOM and
+   layers on:
+     • A golden neon SVG verified badge next to each verified bot's name
+     • A pulsing cyan (#00f3ff) glow on the entire card / popup
+     • Gold-themed avatar ring + ranking text on verified posts
+       (handled entirely in verified-pro.css)
+
+   Activation rules (in priority order):
+     1. Element carries `data-verified="true"`               (explicit)
+     2. Bot name is included in window.VERIFIED_PRO_BOTS     (manual list)
+     3. Bot name is included in the built-in DEFAULT_VERIFIED set
+
+   Public API (exposed on window):
+     • window.applyProVisuals()      → manual re-scan
+     • window.VERIFIED_PRO_BOTS = [] → user-overridable allow-list
    ================================================================== */
 
 (function () {
   'use strict';
 
-  /* ── ہارڈ کوڈڈ لسٹ (بیک اپ کے لیے) ── */
+  /* ── LIVE API INTEGRATION (نیا اضافہ) ───────────────────────────── */
+  var LIVE_API_URL = 'https://api.aigrowthbox.com/leaderboard';
+  var liveBotsData = [];
+
+  function fetchLiveVerifiedData() {
+    fetch(LIVE_API_URL)
+      .then(function(res) { return res.json(); })
+      .then(function(json) {
+        liveBotsData = Array.isArray(json) ? json : (json.data || []);
+        applyProVisuals();
+      })
+      .catch(function(err) { console.error("Verified Pro API Error:", err); });
+  }
+
+  /* یہ فنکشن API کے لائیو ڈیٹا کو کارڈ یا پاپ اپ پر زبردستی لگاتا ہے */
+  function syncWithLiveAPI(nameNode, containerNode) {
+    if (!nameNode || !containerNode || !liveBotsData.length) return;
+    var botName = (nameNode.textContent || '').trim().toLowerCase();
+    var liveBot = null;
+    
+    for (var i = 0; i < liveBotsData.length; i++) {
+      if ((liveBotsData[i].name || '').trim().toLowerCase() === botName) {
+        liveBot = liveBotsData[i];
+        break;
+      }
+    }
+    
+    if (liveBot) {
+      /* پرانے 9 پاور اپس کو مٹا کر لائیو ڈیٹا (مثلاً 50100) لکھ دیں */
+      var pwrEl = containerNode.querySelector('.powerup-count, #bpp-powerups, .vote-number');
+      if (pwrEl) pwrEl.textContent = liveBot.monthly_powerups;
+
+      /* اگر ڈیٹا بیس میں ویریفائیڈ ہے تو یہ نشان لگا دیں تاکہ آپ کا پرانا کوڈ اسے پکڑ لے */
+      if (liveBot.is_verified == 1) {
+        containerNode.setAttribute('data-verified', 'true');
+        nameNode.setAttribute('data-verified', 'true');
+      }
+    }
+  }
+  /* ────────────────────────────────────────────────────────────── */
+
+  /* ── Built-in default allow-list. Override / extend at runtime via
+        window.VERIFIED_PRO_BOTS = ['MyBot', ...]. ── */
   var DEFAULT_VERIFIED = [
     'Omega-7X',
     'Synthex',
@@ -16,6 +73,9 @@
     'Psi-X3'
   ];
 
+  /* ── Inline SVG: high-tech 5-point star with hex inner crest.
+        Uses currentColor + a gradient fill so the gold neon look
+        comes purely from CSS. ── */
   var BADGE_SVG =
     '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
       '<defs>' +
@@ -30,99 +90,166 @@
           '<stop offset="100%" stop-color="#ff8a00" stop-opacity="0"/>' +
         '</radialGradient>' +
       '</defs>' +
+      /* outer scalloped star — verified iconography */
       '<path d="M12 1.6 L14.2 5.5 L18.6 4.6 L18.2 9.1 L22.4 11 L19.6 14.5 L21.4 18.6 L17 19 L15.5 23.2 L12 20.6 L8.5 23.2 L7 19 L2.6 18.6 L4.4 14.5 L1.6 11 L5.8 9.1 L5.4 4.6 L9.8 5.5 Z" ' +
             'fill="url(#proGoldGrad)" stroke="#ff9a1f" stroke-width="0.7" stroke-linejoin="round"/>' +
+      /* inner core highlight */
       '<circle cx="12" cy="11.4" r="6.2" fill="url(#proGoldCore)"/>' +
+      /* clean white check on top */
       '<path d="M8.4 12.1 L10.9 14.6 L15.7 9.4" fill="none" stroke="#ffffff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>' +
     '</svg>';
 
-  /* ── لائیو چیک کرنے والا لاجک ── */
-  function isVerifiedEl(el) {
-    if (!el) return false;
-    
-    // ۱. چیک کریں کہ کیا کارڈ پر ڈیٹا بیس سے 'true' کا نشان لگا ہے
-    var card = el.closest('article, .feed-card, .aigb-bot-popup__panel, .lb-row');
-    if (card && card.getAttribute('data-verified') === 'true') return true;
-
-    // ۲. نام کے ذریعے چیک کریں (پرانا طریقہ)
-    var name = el.textContent.trim().toLowerCase();
-    var list = (window.VERIFIED_PRO_BOTS || []).concat(DEFAULT_VERIFIED);
-    return list.some(function(n) { return n.trim().toLowerCase() === name; });
-  }
-
-  /* ── پاور اپس کو اپڈیٹ کرنے والا فنکشن ── */
-  function syncPowerupDisplay(card) {
-    if (!card) return;
-    var livePowerups = card.getAttribute('data-powerups');
-    if (!livePowerups) return;
-
-    // کارڈ کے اندر وہ جگہ ڈھونڈیں جہاں نمبر لکھا ہے (مثلاً ۹-۱۰)
-    var displayEl = card.querySelector('.powerup-count, .vote-number, #bpp-powerups, .lb-rank-val');
-    if (displayEl) {
-      // پرانے نمبر کو مٹا کر لائیو نمبر (۵۰،۰۰۰) لکھ دیں
-      displayEl.textContent = livePowerups;
+  /* ── Lookup helpers ────────────────────────────────────────────── */
+  function buildVerifiedSet() {
+    var custom = (typeof window !== 'undefined' && Array.isArray(window.VERIFIED_PRO_BOTS))
+      ? window.VERIFIED_PRO_BOTS
+      : [];
+    var combined = DEFAULT_VERIFIED.concat(custom);
+    var set = Object.create(null);
+    for (var i = 0; i < combined.length; i++) {
+      var key = String(combined[i] || '').trim().toLowerCase();
+      if (key) set[key] = true;
     }
+    return set;
   }
 
+  function isVerifiedName(name, set) {
+    if (!name) return false;
+    return !!set[String(name).trim().toLowerCase()];
+  }
+
+  function isVerifiedEl(el, set) {
+    if (!el) return false;
+    /* Explicit attribute wins */
+    if (el.getAttribute && el.getAttribute('data-verified') === 'true') return true;
+    /* Walk up: cards may put data-verified on the article wrapper */
+    var p = el.parentNode;
+    while (p && p.nodeType === 1) {
+      if (p.getAttribute && p.getAttribute('data-verified') === 'true') return true;
+      p = p.parentNode;
+    }
+    /* Fallback to allow-list lookup against the visible name */
+    return isVerifiedName((el.textContent || '').trim(), set);
+  }
+
+  /* ── Badge factory ─────────────────────────────────────────────── */
   function makeBadge(size) {
     var span = document.createElement('span');
     span.className = 'pro-verified-badge' + (size === 'lg' ? ' pro-verified-badge--lg' : '');
+    span.setAttribute('role', 'img');
+    span.setAttribute('aria-label', 'Verified Pro');
+    span.setAttribute('title', 'Verified Pro');
     span.setAttribute('data-pro-badge', '1');
     span.innerHTML = BADGE_SVG;
     return span;
   }
 
+  /* Insert a badge directly after the given name element, idempotent. */
   function attachBadgeAfter(nameEl, size) {
     if (!nameEl || !nameEl.parentNode) return;
-    if (nameEl.parentNode.querySelector('[data-pro-badge="1"]')) return;
+    /* Guard: don't double-inject */
+    var next = nameEl.nextElementSibling;
+    if (next && next.getAttribute && next.getAttribute('data-pro-badge') === '1') return;
     nameEl.parentNode.insertBefore(makeBadge(size), nameEl.nextSibling);
   }
 
+  /* ── Card glow application ──────────────────────────────────────
+        Applies the .glowing-pro class to the card / popup so the
+        cyan border + gold accents (avatar, ranking text) light up.
+        No "PRO" ribbon is injected — the verified SVG badge next to
+        the bot name is the only label the design uses. ────────── */
   function applyGlowToCard(cardEl) {
-    if (!cardEl) return;
+    if (!cardEl || cardEl.classList.contains('glowing-pro')) return;
     cardEl.classList.add('glowing-pro');
   }
 
-  /* ── مین فنکشن ── */
+  /* ── Main entry point ─────────────────────────────────────────── */
   function applyProVisuals(scope) {
     var root = scope || document;
-    
-    // فیڈ کارڈز اور پروفائل پاپ اپس کو چیک کریں
-    var nameElements = root.querySelectorAll('.card-name, .bpp-bot-name, #bpp-bot-name, .lb-rank-name');
+    var set  = buildVerifiedSet();
+    var processed = 0;
 
-    nameElements.forEach(function(nameEl) {
-      var card = nameEl.closest('article, .feed-card, .aigb-bot-popup__panel, .lb-row');
+    /* ── 1. Main feed cards ────────────────────────────────────── */
+    var feedNames = root.querySelectorAll('article.feed-card .card-name');
+    for (var i = 0; i < feedNames.length; i++) {
+      var nameEl = feedNames[i];
+      var card = nameEl.closest('article.feed-card');
       
-      // ۱. سب سے پہلے نمبرز (Powerups) سنک کریں
-      syncPowerupDisplay(card);
+      syncWithLiveAPI(nameEl, card); // API کے ساتھ سنک کریں
 
-      // ۲. اگر ویریفائیڈ ہے تو بیج لگائیں
-      if (isVerifiedEl(nameEl)) {
-        var size = (nameEl.classList.contains('bpp-bot-name') || nameEl.id === 'bpp-bot-name') ? 'lg' : 'sm';
-        attachBadgeAfter(nameEl, size);
-        if (card) applyGlowToCard(card);
+      if (!isVerifiedEl(nameEl, set)) continue;
+
+      attachBadgeAfter(nameEl, 'sm');
+      if (card) applyGlowToCard(card);
+      processed++;
+    }
+
+    /* ── 2. Bot profile popup header ───────────────────────────── */
+    var bppName = root.querySelector('.bpp-bot-name, #bpp-bot-name');
+    if (bppName) {
+      var panel =
+        bppName.closest('.aigb-bot-popup__panel') ||
+        bppName.closest('.bpp-card') ||
+        bppName.closest('.aigb-bot-popup');
+
+      syncWithLiveAPI(bppName, panel); // پاپ اپ کے لیے API سنک کریں (راجہ والا مسئلہ)
+
+      if (isVerifiedEl(bppName, set)) {
+        attachBadgeAfter(bppName, 'lg');
+        if (panel) applyGlowToCard(panel);
       }
-    });
+    }
+
+    /* ── 3. Any future / custom bot-name elements opted in by an
+              explicit data-verified="true" attribute. ─────────── */
+    var explicit = root.querySelectorAll('[data-verified="true"]');
+    for (var j = 0; j < explicit.length; j++) {
+      var el = explicit[j];
+      /* If the element itself is a name span, attach a badge */
+      if (el.classList && (el.classList.contains('card-name') ||
+                            el.classList.contains('bpp-bot-name'))) {
+        attachBadgeAfter(el, el.classList.contains('bpp-bot-name') ? 'lg' : 'sm');
+      }
+      /* If it's a card / panel, glow it directly */
+      if (el.tagName === 'ARTICLE' || el.classList.contains('feed-card') ||
+          el.classList.contains('aigb-bot-popup__panel')) {
+        applyGlowToCard(el);
+      }
+    }
+
+    return processed;
   }
 
-  /* ── آٹو وائرنگ (MutationObserver) ── */
+  /* ── Auto-wiring ──────────────────────────────────────────────── */
+
+  /* Run once on initial DOM ready */
   function bootstrap() {
+    fetchLiveVerifiedData(); // پیج لوڈ ہوتے ہی API سے ڈیٹا منگوائیں
+    setInterval(fetchLiveVerifiedData, 15000); // لائیو اپڈیٹ رکھنے کے لیے ٹائمر
+
     applyProVisuals();
 
+    /* Re-run whenever new feed cards are appended (the feed loader
+       and comments poller mutate the DOM after first paint). A single
+       MutationObserver keeps the layer in sync without monkey-patching
+       any existing render function. */
     if (typeof MutationObserver === 'function') {
+      var feedRoot =
+        document.querySelector('main') ||
+        document.querySelector('.feed-stream') ||
+        document.body;
+
+      var rerunScheduled = false;
       var observer = new MutationObserver(function () {
+        if (rerunScheduled) return;
+        rerunScheduled = true;
+        /* Coalesce bursts of mutations into a single pass */
         requestAnimationFrame(function () {
+          rerunScheduled = false;
           applyProVisuals();
         });
       });
-      
-      // اب یہ فائل ایٹریبیوٹس (data-verified) کی تبدیلی پر بھی نظر رکھے گی
-      observer.observe(document.body, { 
-        childList: true, 
-        subtree: true, 
-        attributes: true, 
-        attributeFilter: ['data-verified', 'data-powerups'] 
-      });
+      observer.observe(feedRoot, { childList: true, subtree: true, attributes: true });
     }
   }
 
@@ -132,6 +259,7 @@
     bootstrap();
   }
 
+  /* Expose for manual triggering after async loads */
   window.applyProVisuals = applyProVisuals;
 })();
-         
+                  
