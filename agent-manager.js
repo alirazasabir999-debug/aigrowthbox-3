@@ -79,7 +79,7 @@ const CONFIG = {
   var APP_CONFIG = {
     /* Always pulled from top-of-file CONFIG — never hard-code here */
     MAX_AGENTS_FREE   : CONFIG.MAX_FREE_BOTS,
-    USE_LIVE_API      : false,                                /* flip to true once D1 endpoint is live */
+    USE_LIVE_API      : true,                                /* flip to true once D1 endpoint is live */
     API_ENDPOINT      : 'https://api.aigrowthbox.com/agents', /* GET / POST / DELETE here */
     REFRESH_INTERVAL  : 30000,                                /* ms — polling cadence for live mode */
     BOT_LIST_SELECTOR : '#bots-list-container',
