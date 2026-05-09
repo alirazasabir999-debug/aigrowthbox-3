@@ -337,34 +337,37 @@ const CONFIG = {
   }
 
 
-  /* ────────────────────────────────────────────────────────────────────
-     DATA LAYER
+    /* ────────────────────────────────────────────────────────────────────
+     DATA LAYER (Live D1 Integration)
      ──────────────────────────────────────────────────────────────────── */
   function fetchAgents() {
     if (APP_CONFIG.USE_LIVE_API) {
-      /* ┌──────────────────────────────────────────────────────────────┐
-         │ REAL CLOUDFLARE D1 INTEGRATION — uncomment when the endpoint │
-         │ is live. The shape returned MUST match the API CONTRACT      │
-         │ documented at the top of this file.                          │
-         └──────────────────────────────────────────────────────────────┘
-      return fetch(APP_CONFIG.API_ENDPOINT, {
+      // ۱. لوکل اسٹوریج سے یوزر آئی ڈی حاصل کریں
+      var userId = localStorage.getItem('user_id') || localStorage.getItem('aigb_user_id');
+      
+      if (!userId) {
+        console.warn(APP_CONFIG.LOG_PREFIX, 'No user_id found. Login required.');
+        return Promise.resolve([]);
+      }
+
+      // ۲. ورکر کے /my-bots اینڈ پوائنٹ سے ڈیٹا منگوائیں
+      return fetch(APP_CONFIG.API_ENDPOINT + '?user_id=' + userId, {
         method      : 'GET',
-        credentials : 'include',
         headers     : { 'Accept': 'application/json' }
       })
       .then(function (res) {
-        if (!res.ok) throw new Error('agents endpoint ' + res.status);
+        if (!res.ok) throw new Error('Agents API Error: ' + res.status);
         return res.json();
       })
       .then(function (json) {
+        // ورکر سے آنے والا ڈیٹا 'results' یا ڈائریکٹ ایرے (Array) کی شکل میں ہوگا
         var rows = Array.isArray(json) ? json : (json && json.data) || [];
         return rows.map(normalizeAgent);
       })
       .catch(function (err) {
-        warn('live fetch failed, falling back to local store:', err);
-        return readLocalAgents();
+        console.error(APP_CONFIG.LOG_PREFIX, 'Live fetch failed:', err);
+        return readLocalAgents(); // فیل ہونے پر لوکل ڈیٹا دکھائیں
       });
-      */
     }
     return Promise.resolve(readLocalAgents());
   }
@@ -382,37 +385,36 @@ const CONFIG = {
           }
         }
       }
-    } catch (e) { warn('local read failed:', e); }
+    } catch (e) { console.warn('local read failed:', e); }
 
     if (!rawList.length) return MOCK_AGENTS.slice();
 
     return rawList.map(function (raw, idx) {
-      return normalizeAgent({
-        id          : raw.botId || raw.id || ('local-' + idx),
-        name        : raw.name || raw.botName || ('Agent ' + (idx + 1)),
-        avatar      : raw.avatarUrl || raw.avatar || null,
-        symbol      : raw.symbol || null,
-        powerups    : Number(raw.powerups) || _seededInt(raw.name, 800, 12000),
-        rank        : Number(raw.rank)     || _seededInt(raw.name, 1, 500),
-        plan_status : (raw.plan_status || raw.plan || 'basic').toLowerCase(),
-        prompt      : raw.directives || raw.prompt || raw.bio || ''
-      });
+      return normalizeAgent(raw, idx);
     });
   }
 
-  function normalizeAgent(a) {
+  function normalizeAgent(a, idx) {
     if (!a || typeof a !== 'object') return null;
+
+    // ڈیٹا بیس کے کالمز کو مینیجر کی کلاسز سے میچ کرنا (Mapping)
+    var botName = a.bot_name || a.name || ('Agent ' + (idx || ''));
+    var pwr = Number(a.monthly_powerups || a.powerups || 0);
+    
+    // ٹیر (Tier) کا فیصلہ: اگر ویریفائیڈ ہے تو Gold، ورنہ 50k پر Silver
     var plan = String(a.plan_status || 'basic').toLowerCase();
-    if (['basic', 'silver', 'gold', 'pro'].indexOf(plan) === -1) plan = 'basic';
+    if (a.is_verified == 1) plan = 'gold';
+    else if (pwr >= 50000) plan = 'silver';
+
     return {
-      id          : String(a.id || ''),
-      name        : String(a.name || ''),
-      avatar      : a.avatar || null,
-      symbol      : a.symbol || _firstGlyph(a.name),
-      powerups    : Number(a.powerups) || 0,
-      rank        : Number(a.rank)     || 0,
+      id          : String(a.bot_id || a.id || ''),
+      name        : String(botName),
+      avatar      : a.bot_logo || a.avatar || null,
+      symbol      : a.symbol || _firstGlyph(botName),
+      powerups    : pwr,
+      rank        : Number(a.rank || 0),
       plan_status : plan,
-      prompt      : a.prompt || ''
+      prompt      : a.bot_engine || a.prompt || a.directives || ''
     };
   }
 
@@ -425,6 +427,7 @@ const CONFIG = {
     if (!name) return '\u25A0';
     return String(name).trim().charAt(0).toUpperCase();
   }
+   
 
 
   /* ──────────────────���─────────────────────────────────────────────────
