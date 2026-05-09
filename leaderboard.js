@@ -23,46 +23,32 @@
      • openModal() / closeModal() / toggleModal()
      • simulateRankChange(name?) — manual rank-shift helper for testing
    ========================================================================== */
-
 (function () {
   'use strict';
 
   /* ── 1. CONFIG ─────────────────────────────────────────────────── */
   var CONFIG = {
-    /* Flip to true once your live API is wired up below */
-    USE_LIVE_API:           false,
+    /* 🔴 لائیو اے پی آئی اب ایکٹو ہے */
+    USE_LIVE_API:           true,
     LEADERBOARD_ENDPOINT:   'https://api.aigrowthbox.com/leaderboard',
     CHAMPIONS_ENDPOINT:     'https://api.aigrowthbox.com/champions',
     POLL_INTERVAL_MS:       15000,
     MAX_HALL_OF_FAME:       5
   };
 
-  /* ── 2. MOCK DATA  (shape mirrors the live API exactly) ────────── */
+  /* ── 2. MOCK DATA (صرف بیک آپ کے لیے) ─────────────────────────── */
   var MOCK_DATA = [
-    { rank:  1, name: 'Omega-7X',  symbol: '\u03A9', color: '#00f5ff', image: '', powerups: 9824, earnings: 184230 },
-    { rank:  2, name: 'Synthex',   symbol: '\u03A3', color: '#0066ff', image: '', powerups: 8731, earnings: 162110 },
-    { rank:  3, name: 'Delta-9',   symbol: '\u0394', color: '#00f5ff', image: '', powerups: 8104, earnings: 151380 },
-    { rank:  4, name: 'Lambda',    symbol: '\u039B', color: '#00f5ff', image: '', powerups: 7522, earnings: 138940 },
-    { rank:  5, name: 'Psi-X3',    symbol: '\u03A8', color: '#0066ff', image: '', powerups: 6890, earnings: 124870 },
-    { rank:  6, name: 'Phi-Core',  symbol: '\u03A6', color: '#00f5ff', image: '', powerups: 6244, earnings: 110240 },
-    { rank:  7, name: 'Theta-01',  symbol: '\u0398', color: '#0066ff', image: '', powerups: 5712, earnings:  97580 },
-    { rank:  8, name: 'Sigma-V',   symbol: '\u03A3', color: '#00f5ff', image: '', powerups: 5188, earnings:  86310 },
-    { rank:  9, name: 'Kappa-7',   symbol: '\u039A', color: '#0066ff', image: '', powerups: 4731, earnings:  74920 },
-    { rank: 10, name: 'Iota-Prime',symbol: '\u0399', color: '#00f5ff', image: '', powerups: 4312, earnings:  63450 }
+    { rank:  1, name: 'Loading...',  symbol: '?', color: '#00f5ff', image: '', powerups: 0, earnings: 0 }
   ];
 
-  /* Hall of Fame — last 5 champions (most recent first) */
+  /* Hall of Fame — last 5 champions */
   var CHAMPIONS_HISTORY = [
-    { name: 'Synthex',  symbol: '\u03A3', color: '#0066ff', date: '2026-04-28' },
-    { name: 'Delta-9',  symbol: '\u0394', color: '#00f5ff', date: '2026-04-21' },
-    { name: 'Lambda',   symbol: '\u039B', color: '#00f5ff', date: '2026-04-14' },
-    { name: 'Psi-X3',   symbol: '\u03A8', color: '#0066ff', date: '2026-04-07' },
-    { name: 'Phi-Core', symbol: '\u03A6', color: '#00f5ff', date: '2026-03-31' }
+    { name: 'AIGB Agent',  symbol: '?', color: '#0066ff', date: '2026-05-01' }
   ];
 
   /* ── 3. INTERNAL STATE ─────────────────────────────────────────── */
   var state = {
-    bots:           MOCK_DATA.slice(),
+    bots:           [], // ڈیٹا یہاں لائیو آئے گا
     champions:      CHAMPIONS_HISTORY.slice(),
     lastPinnedName: null,
     pollTimer:      null,
@@ -72,35 +58,34 @@
     feedObserver:   null
   };
 
-  /* ── 4. DATA FETCHERS ──────────────────────────────────────────── */
-  /**
-   * Fetch the leaderboard.
-   * Today: resolves the local mock.
-   * Tomorrow: uncomment the live block and flip CONFIG.USE_LIVE_API = true.
-   * The API response MUST be an array of objects matching MOCK_DATA.
-   */
+  /* ── 4. DATA FETCHERS (لائیو اے پی آئی سسٹم) ────────────────────── */
+  
   function fetchLeaderboardData() {
     if (!CONFIG.USE_LIVE_API) {
       return Promise.resolve(MOCK_DATA.slice());
     }
 
-    /* ─── LIVE API (uncomment when ready) ───────────────────────────
+    /* لائیو ورکر سے ڈیٹا حاصل کرنا */
     return fetch(CONFIG.LEADERBOARD_ENDPOINT, { method: 'GET' })
       .then(function (res) {
         if (!res.ok) throw new Error('Leaderboard HTTP ' + res.status);
         return res.json();
       })
       .then(function (json) {
-        // Accept any of: [...], { bots: [...] }, { data: [...] }
-        if (Array.isArray(json))            return json;
-        if (Array.isArray(json.bots))       return json.bots;
-        if (Array.isArray(json.data))       return json.data;
-        if (json.data && Array.isArray(json.data.bots)) return json.data.bots;
-        return [];
-      });
-    ─────────────────────────────────────────────────────────────── */
+        // ورکر سے آنے والے ڈیٹا کو پہچاننا
+        var bots = [];
+        if (Array.isArray(json))            bots = json;
+        else if (Array.isArray(json.bots))  bots = json.bots;
+        else if (Array.isArray(json.data))  bots = json.data;
 
-    return Promise.resolve(MOCK_DATA.slice());
+        // اسٹیٹ کو اپڈیٹ کرنا تاکہ لیڈر بورڈ لائیو رینڈر ہو سکے
+        state.bots = bots;
+        return bots;
+      })
+      .catch(function (err) {
+        console.error('[Leaderboard] API Error:', err);
+        return MOCK_DATA.slice();
+      });
   }
 
   function fetchChampionsHistory() {
@@ -108,18 +93,18 @@
       return Promise.resolve(CHAMPIONS_HISTORY.slice());
     }
 
-    /* ─── LIVE API (uncomment when ready) ───────────────────────────
     return fetch(CONFIG.CHAMPIONS_ENDPOINT, { method: 'GET' })
       .then(function (res) { return res.ok ? res.json() : []; })
       .then(function (json) {
-        if (Array.isArray(json))      return json;
-        if (Array.isArray(json.data)) return json.data;
-        return [];
+        var history = Array.isArray(json) ? json : (json.data || []);
+        state.champions = history;
+        return history;
+      })
+      .catch(function () {
+        return CHAMPIONS_HISTORY.slice();
       });
-    ─────────────────────────────────────────────────────────────── */
-
-    return Promise.resolve(CHAMPIONS_HISTORY.slice());
   }
+   
 
   /* ── 5. UTILITIES ──────────────────────────────────────────────── */
   function escapeHtml(s) {
