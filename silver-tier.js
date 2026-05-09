@@ -56,6 +56,13 @@
                 var card = nameEl.closest('article.feed-card, .aigb-bot-popup__panel, .bpp-card');
                 if (!card) return;
 
+                // 🟢 نیا اضافہ: اسکرین پر 9 کی جگہ 50,500 (لائیو پاور اپس) شو کروانے کے لیے
+                card.setAttribute('data-powerups', botInfo.monthly_powerups);
+                var pwrText = card.querySelector('.powerup-count, #bpp-powerups, .vote-number');
+                if (pwrText) {
+                    pwrText.textContent = botInfo.monthly_powerups;
+                }
+
                 // 🔴 اہم لوجک: اگر پہلے سے گولڈن بیج (Verified Pro) موجود ہے 🔴
                 // یہ API سے بھی چیک کرے گا اور کارڈ کے اندر موجود بیج کو بھی دیکھے گا
                 const isVerifiedGold = (botInfo.is_verified == 1);
