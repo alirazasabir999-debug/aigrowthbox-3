@@ -1,17 +1,14 @@
 /* ==================================================================
-   SILVER TIER — visual layer (Live API Edition)
-   ------------------------------------------------------------------
-   یہ فائل API سے 50,000 پاور اپس چیک کرتی ہے اور گولڈن بیج کے
-   ساتھ ٹکراؤ (Conflict) سے بچتی ہے۔
+   SILVER TIER — visual layer (Live API Edition - Fixed Endpoint)
    ================================================================== */
 
 (function() {
     'use strict';
 
-    var LIVE_API_URL = 'https://api.aigrowthbox.com/leaderboard';
+    // 🔴 لنک تبدیل کر دیا گیا ہے
+    var LIVE_API_URL = 'https://api.aigrowthbox.com/agents';
     var liveBotsData = [];
 
-    // وہی ہائی کوالٹی سلور SVG جو آپ نے فراہم کیا تھا
     const SILVER_SVG = `
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <defs>
@@ -31,13 +28,12 @@
             <path d="M8.4 12.1 L10.9 14.6 L15.7 9.4" fill="none" stroke="#ffffff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>`;
 
-    // لائیو ڈیٹا بیس سے معلومات لانا
     function fetchLiveSilverData() {
         fetch(LIVE_API_URL)
             .then(function(res) { return res.json(); })
             .then(function(json) {
                 liveBotsData = Array.isArray(json) ? json : (json.data || []);
-                applySilverTier(); // ڈیٹا آتے ہی فنکشن چلا دیں
+                applySilverTier(); 
             })
             .catch(function(err) { console.error("Silver Tier API Error:", err); });
     }
@@ -45,7 +41,6 @@
     function applySilverTier() {
         if (liveBotsData.length === 0) return;
 
-        // تمام فیڈ کارڈز اور پروفائل پاپ اپ چیک کریں (آپ کے پاپ اپ کا نام بھی شامل ہے)
         const nameElements = document.querySelectorAll('.card-name, #bpp-bot-name, .bpp-bot-name');
 
         nameElements.forEach(function(nameEl) {
@@ -56,34 +51,24 @@
                 var card = nameEl.closest('article.feed-card, .aigb-bot-popup__panel, .bpp-card');
                 if (!card) return;
 
-                // 🟢 نیا اضافہ: اسکرین پر 9 کی جگہ 50,500 (لائیو پاور اپس) شو کروانے کے لیے
                 card.setAttribute('data-powerups', botInfo.monthly_powerups);
                 var pwrText = card.querySelector('.powerup-count, #bpp-powerups, .vote-number');
-                if (pwrText) {
-                    pwrText.textContent = botInfo.monthly_powerups;
-                }
+                if (pwrText) pwrText.textContent = botInfo.monthly_powerups;
 
-                // 🔴 اہم لوجک: اگر پہلے سے گولڈن بیج (Verified Pro) موجود ہے 🔴
-                // یہ API سے بھی چیک کرے گا اور کارڈ کے اندر موجود بیج کو بھی دیکھے گا
                 const isVerifiedGold = (botInfo.is_verified == 1);
                 const hasGoldBadge = card.querySelector('[data-pro-badge="1"]');
                 
                 if (isVerifiedGold || hasGoldBadge) {
-                    // اگر گولڈن بیج مل گیا تو سلور والی ہر چیز مٹا دو (Cleanup)
                     const oldSilver = nameEl.parentNode.querySelector('.silver-badge-wrapper');
                     if (oldSilver) oldSilver.remove();
                     card.classList.remove('silver-glow-card');
-                    return; // اس بوٹ پر اب سلور کام نہیں کرے گا
+                    return; 
                 }
 
-                // پاور اپس کا ڈیٹا ریڈ کریں (ٹارگٹ: 50,000)
                 const powerups = botInfo.monthly_powerups || 0;
 
                 if (powerups >= 50000) {
-                    // ۱. سلور گلو اور بارڈر لگائیں
                     card.classList.add('silver-glow-card');
-
-                    // ۲. نام کے آگے سلور بیج لگائیں (اگر پہلے سے نہیں لگا)
                     if (!nameEl.parentNode.querySelector('.silver-badge-wrapper')) {
                         const span = document.createElement('span');
                         span.className = 'silver-badge-wrapper';
@@ -91,7 +76,6 @@
                         nameEl.parentNode.insertBefore(span, nameEl.nextSibling);
                     }
                 } else {
-                    // اگر پاور اپس 50 ہزار سے کم ہو جائیں تو سلور ہٹا دیں
                     card.classList.remove('silver-glow-card');
                     const silverBadge = nameEl.parentNode.querySelector('.silver-badge-wrapper');
                     if (silverBadge) silverBadge.remove();
@@ -100,25 +84,20 @@
         });
     }
 
-    // مبصر اور لائیو ٹائمر
     function bootstrap() {
-        fetchLiveSilverData(); // پیج لوڈ ہوتے ہی ڈیٹا منگوائیں
-        setInterval(fetchLiveSilverData, 15000); // لائیو اپڈیٹ رکھنے کے لیے ٹائمر
+        fetchLiveSilverData(); 
+        setInterval(fetchLiveSilverData, 15000); 
 
         if (typeof MutationObserver === 'function') {
             var observer = new MutationObserver(function () {
                 requestAnimationFrame(applySilverTier);
             });
-            // جیسے ہی پاپ اپ کھلے گا، یہ فنکشن فوراً چلے گا
             observer.observe(document.body, { childList: true, subtree: true, attributes: true });
         }
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', bootstrap);
-    } else {
-        bootstrap();
-    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootstrap);
+    else bootstrap();
 
     window.applySilverTier = applySilverTier;
 })();
