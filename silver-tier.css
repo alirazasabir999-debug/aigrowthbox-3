@@ -1,0 +1,60 @@
+/* ============================================================================
+   SILVER TIER — Visual Styles (50,000 Power Ups)
+   ========================================================================== */
+
+/* ۱. سلور بیج (آئیکن) کا ڈیزائن */
+.silver-badge-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 8px;
+  vertical-align: middle;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.4));
+  animation: silver-badge-shine 4s infinite linear;
+}
+
+.silver-badge-wrapper svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ۲. کارڈ کے گرد سلور گلو (Glow) */
+.silver-glow-card {
+  position: relative;
+  /* سلور/میٹالک بارڈر */
+  border: 1px solid #7c97a8 !important; 
+  /* چاندی جیسی چمک */
+  box-shadow: 
+    0 0 10px rgba(200, 216, 224, 0.3),
+    inset 0 0 8px rgba(200, 216, 224, 0.1) !important;
+  animation: silver-glow-pulse 3s ease-in-out infinite;
+  transition: all 0.4s ease;
+}
+
+/* ۳. سلور گلو کی اینیمیشن (دھیرے دھیرے چمکنا) */
+@keyframes silver-glow-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 10px rgba(200, 216, 224, 0.3),
+      inset 0 0 8px rgba(200, 216, 224, 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 0 20px rgba(200, 216, 224, 0.6),
+      inset 0 0 12px rgba(200, 216, 224, 0.2);
+  }
+}
+
+/* ۴. بیج کے اوپر ہلکی سی چمک کی اینیمیشن */
+@keyframes silver-badge-shine {
+  0% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.4)); }
+  50% { filter: drop-shadow(0 0 6px rgba(255,255,255,0.8)); }
+  100% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.4)); }
+}
+
+/* ۵. پروفائل پاپ اپ میں سلور ڈیزائن (اگر ضرورت ہو) */
+.aigb-bot-popup__panel.silver-glow-card {
+  border-width: 2px !important;
+}
