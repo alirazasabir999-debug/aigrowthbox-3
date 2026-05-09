@@ -1,205 +1,150 @@
-/* ════════════════════════════════════════════════════════════════════════
-   ║  CENTRALIZED CONFIG  ·  edit prices and targets here ONLY              ║
-   ════════════════════════════════════════════════════════════════════════ */
-const CONFIG = {
-  SILVER_TARGET            : 50000,
-  MAX_FREE_BOTS            : 2,
-  PRICE_GOLD_MONTHLY       : 9.99,
-  PRICE_IDENTITY_REFRESH   : 1.00,
-  CURRENCY_SYMBOL          : '$',
-  CURRENCY_CODE            : 'USD',
-  GOOGLE_PLAY_GOLD_URL     : 'https://play.google.com/store/apps/details?id=com.aigrowthbox.gold',
-  GOOGLE_PLAY_NAME_EDIT_URL: 'https://play.google.com/store/apps/details?id=com.aigrowthbox.identity'
+/* ════════════════════════════════════════════════════════════════════
+   USER STORE & MARKETPLACE LOGIC (TESTING MODE FIX)
+   ════════════════════════════════════════════════════════════════════ */
+
+// ہم نے براؤزر کی میموری ہٹا دی ہے، اب آپ جب بھی ریفریش کریں گے، یہ 'basic' سے شروع ہوگا تاکہ آپ بار بار ٹیسٹ کر سکیں!
+var USER_MARKET_STATE = {
+    plan: 'basic', 
+    totalPowerUps: 5000,
+    usedPowerUps: 1550
 };
 
-(function () {
-  'use strict';
+var userStoreModalEl = null;
 
-  var SILVER_TARGET = CONFIG.SILVER_TARGET;
+// SVG Icons
+const svgCrown = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
+const svgLightning = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>';
+const svgCart = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>';
+const svgPlay = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>';
 
-  var APP_CONFIG = {
-    MAX_AGENTS_FREE   : CONFIG.MAX_FREE_BOTS,
-    USE_LIVE_API      : false,
-    API_ENDPOINT      : 'https://api.aigrowthbox.com/agents',
-    REFRESH_INTERVAL  : 30000,
-    BOT_LIST_SELECTOR : '#bots-list-container',
-    REGISTER_BTN_ID   : 'register-bot-btn',
-    REGISTER_TAB_ID   : 'dashboard-tab-register',
-    BOT_CARD_SELECTOR : '.bot-card',
-    LOG_PREFIX        : '[AgentManager]'
+function buildUserStoreModal() {
+  if (userStoreModalEl) return userStoreModalEl;
+
+  userStoreModalEl = document.createElement('div');
+  userStoreModalEl.className = 'am-modal';
+  userStoreModalEl.innerHTML =
+    '<div class="am-modal__backdrop" id="us-close-bg"></div>' +
+    '<div class="am-modal__panel">' +
+      '<button type="button" id="us-close-btn" style="position: absolute; right: 15px; top: 15px; background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">✕</button>' +
+      '<h2 style="color: #fff; margin-top: 5px; letter-spacing: 2px;">MARKETPLACE</h2>' +
+      '<p style="color: #888; font-size: 13px; margin-bottom: 20px;">Upgrade your profile & get power-ups.</p>' +
+      
+      '<div style="background: #1a1600; border: 1px solid #ffb800; padding: 15px; margin-bottom: 20px; border-radius: 8px;">' +
+         '<h3 style="color: #ffb800; margin: 0 0 5px 0; display:flex; align-items:center; justify-content:center; gap:8px;">' + svgCrown + ' PRO PROFILE (NO ADS)</h3>' +
+         '<p style="color: #ccc; font-size: 12px; margin: 0 0 10px 0;">Remove ads, get the [PRO] badge, and deploy unlimited agents!</p>' +
+         '<p style="color: #fff; font-size: 18px; margin: 0 0 10px 0; font-weight: bold;">$9.99 / Month</p>' +
+         '<button id="us-buy-pro-btn" style="background: transparent; color: #ffb800; width: 100%; border: 1px solid #ffb800; padding: 10px; font-weight: bold; cursor: pointer; border-radius: 4px; box-shadow: inset 0 0 10px rgba(255,184,0,0.1);">UPGRADE TO PRO</button>' +
+      '</div>' +
+
+      '<div style="background: #00151a; border: 1px solid #00f3ff; padding: 15px; border-radius: 8px;">' +
+         '<h3 style="color: #00f3ff; margin: 0 0 5px 0; display:flex; align-items:center; justify-content:center; gap:8px;">' + svgLightning + ' BOOST POWER-UPS</h3>' +
+         '<div style="display: flex; gap: 10px; margin-top: 15px;">' +
+           '<div style="flex: 1; background: #111; border: 1px dashed #555; padding: 10px; border-radius: 5px; display: flex; flex-direction: column;">' +
+             '<p style="color: #fff; margin: 0 0 8px 0; font-size: 15px; font-weight: bold;">+50 Power-Ups</p>' +
+             '<button id="us-watch-ad-btn" style="background: #333; color: #fff; width: 100%; border: 1px solid #555; padding: 8px; font-size: 12px; cursor: pointer; border-radius: 4px; display:flex; align-items:center; justify-content:center; gap:5px; margin-top: auto;"></button>' +
+           '</div>' +
+           '<div style="flex: 1; background: #111; border: 1px solid #00f3ff; padding: 10px; border-radius: 5px; display: flex; flex-direction: column;">' +
+             '<p style="color: #fff; margin: 0 0 8px 0; font-size: 15px; font-weight: bold;">+5,000 Power-Ups</p>' +
+             '<button id="us-buy-power-btn" style="background: transparent; color: #00f3ff; width: 100%; border: 1px solid #00f3ff; padding: 8px; font-weight: bold; font-size: 12px; cursor: pointer; border-radius: 4px; display:flex; align-items:center; justify-content:center; gap:5px; margin-top: auto;">' + svgCart + ' BUY $0.99</button>' +
+           '</div>' +
+         '</div>' +
+      '</div>' +
+    '</div>';
+
+  document.body.appendChild(userStoreModalEl);
+
+  document.getElementById('us-close-btn').onclick = window.closeUserStoreModal;
+  document.getElementById('us-close-bg').onclick = window.closeUserStoreModal;
+  
+  // پرو خریدنے والا کلک
+  document.getElementById('us-buy-pro-btn').onclick = function() {
+      window.activateUserProfilePro();
+      window.closeUserStoreModal();
+      alert("Payment Successful! Your profile is now PRO and bot limit is removed.");
   };
 
-  function log()  { try { console.log.apply(console, [APP_CONFIG.LOG_PREFIX].concat([].slice.call(arguments))); } catch (e) {} }
-  function warn() { try { console.warn.apply(console, [APP_CONFIG.LOG_PREFIX].concat([].slice.call(arguments))); } catch (e) {} }
+  return userStoreModalEl;
+}
 
-  var STATE = {
-    agents          : [],
-    user_plan       : 'basic', 
-    activeAgentId   : null,
-    deleteConfirmFor: null
-  };
-
-  function tierFor(agent) {
-    if (!agent) return 'basic';
-    var plan = String(agent.plan_status || 'basic').toLowerCase();
-    if (plan === 'pro' || plan === 'gold') return 'pro';
-    if (Number(agent.powerups) >= SILVER_TARGET) return 'silver';
-    return 'basic';
-  }
-
-  /* --- UI HELPERS (SVG BADGES) --- */
-  function svgSilverBadge(opts) {
-    opts = opts || {}; var s = opts.size || 56;
-    return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 64 64"><path d="M32 3 L57 17 V47 L32 61 L7 47 V17 Z" fill="#c8d8e0" stroke="#fff" stroke-width="2"/></svg>';
-  }
-
-  function svgGoldBadge(opts) {
-    opts = opts || {}; var s = opts.size || 56;
-    return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 64 64"><path d="M32 6 L39 24 L58 26 L43 39 L48 58 L32 48 L16 58 L21 39 L6 26 L25 24 Z" fill="#ffb800" stroke="#fff" stroke-width="2"/></svg>';
-  }
-
-  /* --- CORE LOGIC --- */
-  function isOverLimit() {
-    var max = (STATE.user_plan === 'pro' || STATE.user_plan === 'gold') ? Infinity : APP_CONFIG.MAX_AGENTS_FREE;
-    return STATE.agents.length >= max;
-  }
-
-  // 🔴 فکسڈ فنکشن: لاگ آؤٹ اور لمٹ چیک کرنے کے لیے 🔴
-  function enforceBotLimit() {
-    var btn     = document.getElementById(APP_CONFIG.REGISTER_BTN_ID);
-    var tabBtn  = document.getElementById(APP_CONFIG.REGISTER_TAB_ID);
-    
-    // چیک کریں کہ کیا یوزر لاگ ان ہے؟ (لاگ آؤٹ بٹن کی موجودگی سے)
-    var logoutBtn = document.getElementById('profile-logout-btn');
-    var isLoggedIn = (logoutBtn && logoutBtn.style.display !== 'none' && logoutBtn.style.display !== '');
-    
-    var locked  = isOverLimit();
-    var banner = document.getElementById('am-limit-banner');
-
-    // اگر یوزر لاگ آؤٹ ہے، تو کوئی بینر یا لاک نہ دکھائیں
-    if (!isLoggedIn) {
-      if (banner) banner.style.display = 'none';
-      [btn, tabBtn].forEach(function (el) { if (el) el.classList.remove('am-locked'); });
-      return; 
-    }
-
-    /* --- اب باقی کام صرف تب ہوگا جب یوزر لاگ ان ہو --- */
-    [btn, tabBtn].forEach(function (el) {
-      if (!el) return;
-      if (locked) {
-        el.classList.add('am-locked');
-        el.setAttribute('aria-disabled', 'true');
-        el.setAttribute('title', 'Plan upgrade required — free plan supports max ' + APP_CONFIG.MAX_AGENTS_FREE + ' bots');
-        if (el.dataset.amLockBound !== '1') {
-          el.addEventListener('click', _interceptLockedRegister, true);
-          el.dataset.amLockBound = '1';
-        }
-      } else {
-        el.classList.remove('am-locked');
-        el.removeAttribute('aria-disabled');
-      }
-    });
-
-    var listContainer = document.querySelector(APP_CONFIG.BOT_LIST_SELECTOR);
-    if (!listContainer) return;
-
-    if (locked) {
-      if (!banner) {
-        banner = document.createElement('div');
-        banner.id = 'am-limit-banner';
-        banner.className = 'am-limit-banner';
-        banner.innerHTML =
-          '<div class="am-limit-banner__icon">' +
-            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 1 21h22L12 2z"/><line x1="12" y1="9" x2="12" y2="14"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>' +
-          '</div>' +
-          '<div class="am-limit-banner__body">' +
-            '<span class="am-limit-banner__title">PLAN_UPGRADE_REQUIRED</span>' +
-            '<span class="am-limit-banner__sub">Free tier capped at ' + APP_CONFIG.MAX_AGENTS_FREE + ' bots. Upgrade to deploy more agents.</span>' +
-          '</div>' +
-          '<button type="button" class="am-limit-banner__cta">UPGRADE</button>';
-        
-        listContainer.parentNode.insertBefore(banner, listContainer);
-        
-        // مارکیٹ پلیس کے ساتھ لنک
-        banner.querySelector('.am-limit-banner__cta').addEventListener('click', function () {
-          if (typeof window.openUserStoreModal === 'function') {
-            window.openUserStoreModal();
-          } else {
-            openPricingModal('gold'); // Fallback
-          }
-        });
-      }
-      banner.style.display = 'flex';
-    } else if (banner) {
-      banner.style.display = 'none';
-    }
-  }
-
-  function _interceptLockedRegister(e) {
-    if (!isOverLimit()) return;
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    _flashBanner();
-  }
-
-  function _flashBanner() {
-    var banner = document.getElementById('am-limit-banner');
-    if (!banner) return;
-    banner.classList.remove('am-flash');
-    void banner.offsetWidth;
-    banner.classList.add('am-flash');
-  }
-
-  function fetchAgents() {
-    // Mock for now
-    return Promise.resolve(MOCK_AGENTS);
-  }
-
-  function setAgents(list) {
-    STATE.agents = list || [];
-    enforceBotLimit();
-    decorateExistingCards();
-  }
-
-  function setUserPlan(plan) {
-    STATE.user_plan = plan;
-    enforceBotLimit();
-  }
-
-  function decorateExistingCards() {
-    var cards = document.querySelectorAll(APP_CONFIG.BOT_CARD_SELECTOR);
-    cards.forEach(function (card) {
-      if (card.dataset.amDecorated === '1') return;
-      card.addEventListener('click', function() {
-          openModal(card.dataset.amAgentId);
-      });
-      card.dataset.amDecorated = '1';
-    });
-  }
-
-  function openModal(id) { log("Opening modal for:", id); }
-  function openPricingModal(type) { log("Opening pricing for:", type); }
-
-  function bootstrap() {
-    fetchAgents().then(setAgents);
-    setInterval(function () {
-      fetchAgents().then(setAgents);
-    }, APP_CONFIG.REFRESH_INTERVAL);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bootstrap);
+window.openUserStoreModal = function() {
+  var m = buildUserStoreModal();
+  var adBtn = document.getElementById('us-watch-ad-btn');
+  
+  if (USER_MARKET_STATE.plan === 'pro') {
+    adBtn.innerHTML = 'CLAIM FREE';
+    adBtn.style.background = '#00f3ff';
+    adBtn.style.color = '#000';
+    adBtn.style.border = 'none';
   } else {
-    bootstrap();
+    adBtn.innerHTML = svgPlay + ' WATCH AD';
+    adBtn.style.background = '#333';
+    adBtn.style.color = '#fff';
+    adBtn.style.border = '1px solid #555';
   }
+  m.classList.add('am-modal--open');
+};
 
-  /* PUBLIC API */
-  window.AgentManager = {
-    setUserPlan: setUserPlan,
-    enforceBotLimit: enforceBotLimit,
-    state: STATE
-  };
+window.closeUserStoreModal = function() {
+  if (userStoreModalEl) userStoreModalEl.classList.remove('am-modal--open');
+};
 
-})();
- 
+window.activateUserProfilePro = function() {
+    USER_MARKET_STATE.plan = 'pro'; // پلان پرو کر دیا
+    
+    // بیج دکھاؤ، بٹن غائب کرو
+    var proBadge = document.getElementById('main-profile-pro-badge');
+    if (proBadge) proBadge.style.display = 'inline-block';
+    
+    var upBtn = document.getElementById('main-upgrade-btn');
+    if (upBtn) upBtn.style.display = 'none';
+
+    if (typeof window.AgentManager !== 'undefined' && typeof window.AgentManager.setUserPlan === 'function') {
+        window.AgentManager.setUserPlan('pro');
+    }
+};
+
+window.updateUserPowerUpTracker = function() {
+    var remaining = USER_MARKET_STATE.totalPowerUps - USER_MARKET_STATE.usedPowerUps;
+    var percentage = (remaining / USER_MARKET_STATE.totalPowerUps) * 100;
+    if (percentage < 0) percentage = 0;
+
+    var fillLine = document.getElementById('powerup-fill-line');
+    var textRemaining = document.getElementById('powerup-text-remaining');
+    var textTotal = document.getElementById('powerup-text-total');
+
+    if (fillLine) fillLine.style.width = percentage + '%';
+    if (textRemaining) textRemaining.textContent = remaining.toLocaleString();
+    if (textTotal) textTotal.textContent = " / " + USER_MARKET_STATE.totalPowerUps.toLocaleString();
+};
+
+/* 🔴 سمارٹ لاگ ان چیکر 🔴 */
+setInterval(function() {
+    var logoutBtn = document.getElementById('profile-logout-btn');
+    var premiumSection = document.getElementById('premium-features-section');
+    var proBadge = document.getElementById('main-profile-pro-badge');
+    var upBtn = document.getElementById('main-upgrade-btn');
+    
+    if (premiumSection && logoutBtn) {
+        // لاگ آؤٹ کی حالت
+        if (logoutBtn.style.display === 'none' || logoutBtn.style.display === '') {
+            premiumSection.style.display = 'none'; 
+            if (proBadge) proBadge.style.display = 'none'; 
+        } else {
+            // لاگ ان کی حالت
+            premiumSection.style.display = 'block'; 
+            
+            // یہاں ہم چیک کر رہے ہیں کہ یوزر پرو ہے یا نہیں؟
+            if (USER_MARKET_STATE.plan === 'pro') {
+                if (upBtn) upBtn.style.display = 'none'; // اپگریڈ بٹن غائب
+                if (proBadge) proBadge.style.display = 'inline-block'; // PRO بیج حاضر
+            } else {
+                if (upBtn) upBtn.style.display = 'inline-block'; // اپگریڈ بٹن حاضر
+                if (proBadge) proBadge.style.display = 'none'; // PRO بیج غائب
+            }
+        }
+    }
+}, 500);
+
+document.addEventListener('DOMContentLoaded', function() {
+    window.updateUserPowerUpTracker();
+});
