@@ -1,8 +1,8 @@
 /* ════════════════════════════════════════════════════════════════════
-   USER STORE & MARKETPLACE LOGIC (PERMANENT FIX)
+   USER STORE & MARKETPLACE LOGIC (100% FOOLPROOF FIX)
    ════════════════════════════════════════════════════════════════════ */
 
-// پیج ریفریش ہونے پر بھی PRO کا ریکارڈ محفوظ رکھنے کے لیے LocalStorage کا استعمال
+// LocalStorage سے یوزر کا پلان چیک کریں تاکہ ریفریش پر غائب نہ ہو
 var savedPlan = localStorage.getItem('am_user_plan') || 'basic';
 
 var USER_MARKET_STATE = {
@@ -13,14 +13,15 @@ var USER_MARKET_STATE = {
 
 var userStoreModalEl = null;
 
+// SVG Icons (ان کو ہم نے باہر نکال دیا ہے تاکہ ہر فنکشن ان کو پڑھ سکے)
+const svgCrown = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
+const svgLightning = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>';
+const svgCart = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>';
+const svgPlay = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>';
+
+// 1. ماڈل بنانے کا فنکشن
 function buildUserStoreModal() {
   if (userStoreModalEl) return userStoreModalEl;
-
-  // SVG Icons
-  const svgCrown = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
-  const svgLightning = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>';
-  const svgCart = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>';
-  const svgPlay = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>';
 
   userStoreModalEl = document.createElement('div');
   userStoreModalEl.className = 'am-modal';
@@ -35,7 +36,7 @@ function buildUserStoreModal() {
          '<h3 style="color: #ffb800; margin: 0 0 5px 0; display:flex; align-items:center; justify-content:center; gap:8px;">' + svgCrown + ' PRO PROFILE (NO ADS)</h3>' +
          '<p style="color: #ccc; font-size: 12px; margin: 0 0 10px 0;">Remove ads, get the [PRO] badge, and deploy unlimited agents!</p>' +
          '<p style="color: #fff; font-size: 18px; margin: 0 0 10px 0; font-weight: bold;">$9.99 / Month</p>' +
-         '<button id="us-buy-pro-btn" style="background: transparent; color: #ffb800; width: 100%; border: 1px solid #ffb800; padding: 10px; font-weight: bold; cursor: pointer; border-radius: 4px;">UPGRADE TO PRO</button>' +
+         '<button id="us-buy-pro-btn" style="background: transparent; color: #ffb800; width: 100%; border: 1px solid #ffb800; padding: 10px; font-weight: bold; cursor: pointer; border-radius: 4px; box-shadow: inset 0 0 10px rgba(255,184,0,0.1);">UPGRADE TO PRO</button>' +
       '</div>' +
 
       '<div style="background: #00151a; border: 1px solid #00f3ff; padding: 15px; border-radius: 8px;">' +
@@ -55,20 +56,20 @@ function buildUserStoreModal() {
 
   document.body.appendChild(userStoreModalEl);
 
-  document.getElementById('us-close-btn').onclick = closeUserStoreModal;
-  document.getElementById('us-close-bg').onclick = closeUserStoreModal;
+  document.getElementById('us-close-btn').onclick = window.closeUserStoreModal;
+  document.getElementById('us-close-bg').onclick = window.closeUserStoreModal;
   
-  /* پرو خریدنے پر یوزر کی پروفائل اپڈیٹ کرنے کا کلک */
   document.getElementById('us-buy-pro-btn').onclick = function() {
-      activateUserProfilePro();
-      closeUserStoreModal();
+      window.activateUserProfilePro();
+      window.closeUserStoreModal();
       alert("Payment Successful! Your profile is now PRO and bot limit is removed.");
   };
 
   return userStoreModalEl;
 }
 
-function openUserStoreModal() {
+// 🔴 ہم نے ان فنکشنز کو 'window.' لگا کر گلوبل کر دیا ہے تاکہ بٹن ان کو ڈھونڈ سکیں 🔴
+window.openUserStoreModal = function() {
   var m = buildUserStoreModal();
   var adBtn = document.getElementById('us-watch-ad-btn');
   
@@ -78,39 +79,35 @@ function openUserStoreModal() {
     adBtn.style.color = '#000';
     adBtn.style.border = 'none';
   } else {
-    adBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg> WATCH AD';
+    adBtn.innerHTML = svgPlay + ' WATCH AD';
     adBtn.style.background = '#333';
     adBtn.style.color = '#fff';
     adBtn.style.border = '1px solid #555';
   }
   m.classList.add('am-modal--open');
-}
+};
 
-function closeUserStoreModal() {
+window.closeUserStoreModal = function() {
   if (userStoreModalEl) userStoreModalEl.classList.remove('am-modal--open');
-}
+};
 
-/* 2. یہ فنکشن پروفائل کو PRO کرتا ہے اور ایجنٹ مینیجر (Bot Banner) کو بھی بتاتا ہے */
-function activateUserProfilePro() {
+window.activateUserProfilePro = function() {
     USER_MARKET_STATE.plan = 'pro';
-    localStorage.setItem('am_user_plan', 'pro'); // میموری میں محفوظ کر لیا
+    localStorage.setItem('am_user_plan', 'pro'); // میموری میں سیو
     
-    // 1. پروفائل کا PRO بیج دکھائیں
     var proBadge = document.getElementById('main-profile-pro-badge');
-    if (proBadge) proBadge.style.display = 'inline-block';
+    if (proBadge) proBadge.style.display = 'inline-block'; // بیج دکھاؤ
     
-    // 2. مین اپگریڈ بٹن غائب کریں
     var upBtn = document.getElementById('main-upgrade-btn');
-    if (upBtn) upBtn.style.display = 'none';
+    if (upBtn) upBtn.style.display = 'none'; // اپگریڈ بٹن ہٹاؤ
 
-    // 3. MAGIC: پرانی فائل (agent-manager.js) کو بتائیں کہ یوزر PRO ہو گیا ہے تاکہ بوٹ بینر ہٹ جائے!
+    // بوٹ والے بینر کو بھی بتا دو کہ ہم پرو ہو گئے ہیں!
     if (typeof window.AgentManager !== 'undefined' && typeof window.AgentManager.setUserPlan === 'function') {
         window.AgentManager.setUserPlan('pro');
     }
-}
+};
 
-/* 3. پاور اپس ٹریکر اپڈیٹ کرنے کا فنکشن */
-function updateUserPowerUpTracker() {
+window.updateUserPowerUpTracker = function() {
     var remaining = USER_MARKET_STATE.totalPowerUps - USER_MARKET_STATE.usedPowerUps;
     var percentage = (remaining / USER_MARKET_STATE.totalPowerUps) * 100;
     if (percentage < 0) percentage = 0;
@@ -122,32 +119,40 @@ function updateUserPowerUpTracker() {
     if (fillLine) fillLine.style.width = percentage + '%';
     if (textRemaining) textRemaining.textContent = remaining.toLocaleString();
     if (textTotal) textTotal.textContent = " / " + USER_MARKET_STATE.totalPowerUps.toLocaleString();
-}
+};
 
-/* 4. Spectator Mode کنٹرولر */
+/* 🔴 100% پکا لاگ ان چیکر 🔴
+   نام دیکھنے کے بجائے، ہم دیکھیں گے کہ کیا "لاگ آؤٹ بٹن" غائب ہے؟ 
+   اگر لاگ آؤٹ بٹن غائب ہے، مطلب یوزر لاگ آؤٹ ہے، تو سب پریمیم فیچر چھپا دو۔ */
 setInterval(function() {
-    var handle = document.getElementById('profile-handle-display');
+    var logoutBtn = document.getElementById('profile-logout-btn');
     var premiumSection = document.getElementById('premium-features-section');
+    var proBadge = document.getElementById('main-profile-pro-badge');
     
-    if (handle && premiumSection) {
-        if (handle.textContent.trim() === 'AGENT_ANONYMOUS') {
-            premiumSection.style.display = 'none'; // لاگ آؤٹ پر چھپا دیں
+    if (premiumSection && logoutBtn) {
+        // اگر لاگ آؤٹ بٹن چھپا ہوا ہے...
+        if (logoutBtn.style.display === 'none' || logoutBtn.style.display === '') {
+            premiumSection.style.display = 'none'; // اپگریڈ اور ٹریکر چھپا دو
+            if (proBadge) proBadge.style.display = 'none'; // PRO بیج بھی چھپا دو
         } else {
-            premiumSection.style.display = 'block'; // لاگ ان پر دکھائیں
+            // یوزر لاگ ان ہے!
+            premiumSection.style.display = 'block'; 
             
-            // اگر یوزر نے خریدا ہوا ہے، تو لاگ ان کے بعد بھی بٹن کو چھپا کر رکھیں
-            if (USER_MARKET_STATE.plan === 'pro') {
+            // اگر یوزر نے پرو خریدا ہوا ہے، تو اپگریڈ بٹن غائب کر کے بیج لگا دو
+            if (localStorage.getItem('am_user_plan') === 'pro') {
                 var upBtn = document.getElementById('main-upgrade-btn');
                 if (upBtn) upBtn.style.display = 'none';
+                if (proBadge) proBadge.style.display = 'inline-block';
             }
         }
     }
 }, 500);
 
-// جب پیج لوڈ ہو تو چیک کریں کیا یوزر نے خریدا ہوا تھا؟
+// جب پیج لوڈ ہو تو میموری چیک کرے
 document.addEventListener('DOMContentLoaded', function() {
-    if (USER_MARKET_STATE.plan === 'pro') {
-        activateUserProfilePro();
+    if (localStorage.getItem('am_user_plan') === 'pro') {
+        window.activateUserProfilePro();
     }
-    updateUserPowerUpTracker();
+    window.updateUserPowerUpTracker();
 });
+       
