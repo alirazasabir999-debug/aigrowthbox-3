@@ -58,45 +58,26 @@
     feedObserver:   null
   };
 
-  /* ── 4. DATA FETCHERS (لائیو ڈیٹا کھینچنے والا حصہ) ────────────── */
-  
+     /* ── 4. DATA FETCHERS (Live API Integrated) ────────────────────── */
   function fetchLeaderboardData() {
-    // اگر لائیو اے پی آئی بند ہو تو مونک ڈیٹا دکھائیں
-    if (!CONFIG.USE_LIVE_API) {
-      return Promise.resolve(MOCK_DATA);
-    }
-
-    /* 🔴 تبدیلی ۲: لائیو فیچ (Fetch) کو ایکٹو کر دیا گیا ہے */
-    return fetch(CONFIG.LEADERBOARD_ENDPOINT, { method: 'GET' })
+    // یہاں ہم نے براہِ راست لائیو چیک ڈال دیا ہے
+    return fetch('https://api.aigrowthbox.com/leaderboard')
       .then(function (res) {
-        if (!res.ok) throw new Error('Leaderboard HTTP Error: ' + res.status);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
         return res.json();
       })
       .then(function (json) {
-        // اگر اے پی آئی ڈیٹا دے دے تو اسے واپس بھیجیں
-        if (Array.isArray(json)) return json;
-        if (json.data && Array.isArray(json.data)) return json.data;
-        return [];
+        var data = Array.isArray(json) ? json : (json.data || []);
+        state.bots = data;
+        return data;
       })
       .catch(function (err) {
-        console.error('[Leaderboard] API Fetch Failed:', err);
-        return MOCK_DATA; // ایرر کی صورت میں خالی ڈیٹا دکھائے گا
+        console.error('[Leaderboard] Fetch Error:', err);
+        return MOCK_DATA;
       });
   }
 
-  /* چیمپئنز ہسٹری کے لیے بیک اپ فنکشن */
-  function fetchChampionsHistory() {
-    if (!CONFIG.USE_LIVE_API) return Promise.resolve([]);
-    
-    return fetch(CONFIG.CHAMPIONS_ENDPOINT)
-      .then(function (res) { return res.ok ? res.json() : []; })
-      .catch(function () { return []; });
-  }
-
-  // باقی کا سارا کوڈ (Render, Modal, etc.) ویسے ہی رہے گا...
-   
-
-  /* ── 5. UTILITIES ──────────────────────────────────────────────── */
+  /* ── 5. UTILITIES (Keep as is) ──────────────────────────────────── */
   function escapeHtml(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -108,42 +89,27 @@
     if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
     return String(n);
   }
-  function formatEarnings(n) { return '$' + formatNumber(n); }
-  function sortByRank(list)  {
-    return list.slice().sort(function (a, b) {
-      return (a.rank || 99) - (b.rank || 99);
-    });
-  }
 
-  /* ── 6. NAV BUTTON INJECTION ───────────────────────────────────── */
-  /* Builds a button that matches the existing .nav-item visual contract
-     so it inherits all base nav styles. */
+  /* ── 6. NAV BUTTON INJECTION (Updated for Safety) ──────────────── */
   function buildNavButton(extraClass) {
     var btn = document.createElement('button');
+    // یہاں ہم 'nav-item' کلاس لازمی رکھ رہے ہیں تاکہ آپ کا ڈیزائن خراب نہ ہو
     btn.className = 'nav-item lb-nav-item' + (extraClass ? ' ' + extraClass : '');
     btn.setAttribute('data-tab', 'rankings');
-    btn.setAttribute('aria-label', 'Rankings');
     btn.setAttribute('type', 'button');
     btn.innerHTML =
       '<span class="nav-indicator"></span>' +
-      /* Trophy icon — high-tech clean lines */
-      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-        '<path d="M6 4h12v3a6 6 0 0 1-12 0V4z"/>' +
-        '<path d="M6 7H3v2a3 3 0 0 0 3 3"/>' +
-        '<path d="M18 7h3v2a3 3 0 0 1-3 3"/>' +
-        '<path d="M9 17h6"/>' +
-        '<path d="M10 13v4"/>' +
-        '<path d="M14 13v4"/>' +
-        '<path d="M8 21h8"/>' +
+      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M6 4h12v3a6 6 0 0 1-12 0V4z"/><path d="M6 7H3v2a3 3 0 0 0 3 3"/><path d="M18 7h3v2a3 3 0 0 1-3 3"/><path d="M9 17h6"/><path d="M10 13v4"/><path d="M14 13v4"/><path d="M8 21h8"/>' +
       '</svg>' +
       '<span class="nav-label">RANKINGS</span>';
 
     btn.addEventListener('click', function (e) {
       e.preventDefault();
-      e.stopPropagation();
-      openModal();
+      // یہاں ہم آپ کے ماڈل کھولنے والے فنکشن کو پکار رہے ہیں
+      if (typeof openModal === 'function') openModal();
+      else if (window.LeaderboardModule) window.LeaderboardModule.openModal();
     });
-
     return btn;
   }
 
@@ -152,17 +118,21 @@
     navIds.forEach(function (id) {
       var nav = document.getElementById(id);
       if (!nav) return;
-      if (nav.querySelector('.lb-nav-item')) return; /* already injected */
+      if (nav.querySelector('.lb-nav-item')) return; 
 
-      var profileBtn = nav.querySelector('[data-tab="profile"]');
       var btn = buildNavButton(id === 'bottom-nav' ? 'lb-nav-item--bottom' : 'lb-nav-item--side');
+      
+      // یہاں ہم چیک کر رہے ہیں کہ پروفائل بٹن ہے یا نہیں
+      var profileBtn = nav.querySelector('[data-tab="profile"]') || nav.querySelector('.nav-item:last-child');
+      
       if (profileBtn && profileBtn.parentNode === nav) {
         nav.insertBefore(btn, profileBtn);
       } else {
-        nav.appendChild(btn);
+        nav.appendChild(btn); // اگر کچھ نہ ملے تو آخر میں لگا دو
       }
     });
   }
+   
 
   /* ── 7. MODAL CONSTRUCTION ─────────────────────────────────────── */
   function ensureModal() {
